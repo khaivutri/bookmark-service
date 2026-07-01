@@ -17,7 +17,7 @@ type healthCheck struct {
 }
 
 // NewHealthCheck creates and returns a new HealthCheck handler.
-func NewHealthCheck(isHealthy service.HealthCheck) *healthCheck {
+func NewHealthCheck(isHealthy service.HealthCheck) HealthCheck {
 	return &healthCheck{IsHealthy: isHealthy}
 }
 

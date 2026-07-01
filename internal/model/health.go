@@ -10,5 +10,5 @@ type HealthConfig interface {
 type HealthReport struct {
 	Message 		string 		`json:"message"`
 	ServiceName 	string 		`json:"service_name"`
-	InstanceId 		string		`json:"instance_id"`
+	InstanceID 		string		`json:"instance_id"`
 }

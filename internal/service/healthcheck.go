@@ -24,6 +24,6 @@ func (hc *healthCheck) Check()*model.HealthReport{
 	return &model.HealthReport{
 					Message:		 "OK", 
 					ServiceName:	 serviceName, 
-					InstanceId: 	 instanceId,
+					InstanceID: 	 instanceId,
 				}
 }
