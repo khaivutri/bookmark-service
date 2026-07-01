@@ -1,0 +1,41 @@
+package api
+
+import (
+	"fmt"
+
+	"github.com/gin-gonic/gin"
+	"github.com/khaivutri/bookmark-service/internal/handler"
+	"github.com/khaivutri/bookmark-service/internal/service"
+)
+
+// Engine defines the interface for the API engine.
+type Engine interface {
+	Start() error
+}
+
+type engine struct {
+	app *gin.Engine
+	cfg *Config
+}
+
+// NewEngine creates and returns a new Engine instance with initialized routes.
+func NewEngine(cfg *Config) Engine{
+	app := &engine{
+		app : gin.Default(),
+		cfg : cfg,
+	}
+	app.initRoutes()
+	return app
+}
+
+// Start runs the API server on the configured port.
+func (e *engine) Start() error {
+	return e.app.Run(fmt.Sprintf(":%s", e.cfg.AppPort))
+}
+
+func (e *engine) initRoutes(){
+	healthCheckSvc := service.NewHealthCheck(e.cfg)
+	healthCheck := handler.NewHealthCheck(healthCheckSvc)
+	e.app.GET("/health-check", healthCheck.HealthCheck)
+}
+
