@@ -103,11 +103,67 @@ INSTANCE_ID=
 
 ---
 
-## 4. Run the application
+## 4. Use the Makefile
+
+This project includes a `Makefile` for common development tasks.
+
+### List available targets
 
 ```bash
-go run ./cmd/api
+make help
 ```
+
+### Install dependencies
+
+```bash
+make deps
+```
+
+### Run the application
+
+```bash
+make run
+```
+
+Override environment values at runtime:
+
+```bash
+make run APP_PORT=9090 SERVICE_NAME=my_service
+```
+
+### Run swagger generation then start the app
+
+```bash
+make dev-run
+```
+
+This target first generates Swagger docs and then starts the application.
+
+### Run with custom configuration
+
+You can override the default environment variables directly from the command line.
+
+```bash
+make dev-run \
+  APP_PORT=<your_custom_port> \
+  SERVICE_NAME=<your_custom_service_name> \
+  INSTANCE_ID=<your_uuid>
+```
+
+Example:
+
+```bash
+make dev-run \
+  APP_PORT=9090 \
+  SERVICE_NAME=bookmark-service-dev \
+  INSTANCE_ID=550e8400-e29b-41d4-a716-446655440000
+```
+
+> **Note**
+>
+> - `APP_PORT` specifies the port on which the application listens.
+> - `SERVICE_NAME` specifies the service name used by the application.
+> - `INSTANCE_ID` **must be a valid UUID**. The application validates this value during startup and will fail to start if the provided UUID is invalid.
 
 ---
 
