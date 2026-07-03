@@ -8,7 +8,7 @@ type HealthConfig interface {
 
 // HealthReport represents the health status response.
 type HealthReport struct {
-	Message 		string 		`json:"message"`
-	ServiceName 	string 		`json:"service_name"`
-	InstanceID 		string		`json:"instance_id"`
+	Message 		string 		`json:"message" example:"OK"`
+	ServiceName 	string 		`json:"service_name" example:"bookmark_service"`
+	InstanceID 		string		`json:"instance_id" example:"cbe1a562-596b-45d0-bf8b-a999b23b184a"`
 }

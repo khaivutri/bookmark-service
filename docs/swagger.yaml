@@ -1,0 +1,36 @@
+basePath: /
+definitions:
+  model.HealthReport:
+    properties:
+      instance_id:
+        example: cbe1a562-596b-45d0-bf8b-a999b23b184a
+        type: string
+      message:
+        example: OK
+        type: string
+      service_name:
+        example: bookmark_service
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a simple REST API for a bookmark service.
+  title: Bookmark Service API
+  version: "1.0"
+paths:
+  /health-check:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.HealthReport'
+      summary: Health Check
+      tags:
+      - Health Check
+swagger: "2.0"

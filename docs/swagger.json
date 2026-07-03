@@ -1,0 +1,54 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a simple REST API for a bookmark service.",
+        "title": "Bookmark Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/health-check": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health Check"
+                ],
+                "summary": "Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.HealthReport"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.HealthReport": {
+            "type": "object",
+            "properties": {
+                "instance_id": {
+                    "type": "string",
+                    "example": "cbe1a562-596b-45d0-bf8b-a999b23b184a"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "OK"
+                },
+                "service_name": {
+                    "type": "string",
+                    "example": "bookmark_service"
+                }
+            }
+        }
+    }
+}

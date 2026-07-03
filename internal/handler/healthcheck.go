@@ -22,6 +22,12 @@ func NewHealthCheck(isHealthy service.HealthCheck) HealthCheck {
 }
 
 // HealthCheck handles the health check HTTP request.
+//@Summary Health Check
+//@Tags Health Check
+//@Accept json
+//@Produce json
+//@Success 200 {object} model.HealthReport	
+//@Router /health-check [get]
 func (hc *healthCheck) HealthCheck(ctx *gin.Context) {
 	report := hc.IsHealthy.Check()
 

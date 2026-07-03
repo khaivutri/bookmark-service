@@ -7,6 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/handler"
 	"github.com/khaivutri/bookmark-service/internal/service"
+
+	_ "github.com/khaivutri/bookmark-service/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // Engine defines the interface for the API engine.
@@ -45,6 +49,8 @@ func (e *engine) initRoutes(){
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
 	
 	e.app.HandleMethodNotAllowed = true	
+	
+	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthCheck.HealthCheck)
 }
 
