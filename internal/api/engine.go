@@ -45,7 +45,7 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 	
 func (e *engine) initRoutes(){
-	healthCheckSvc := service.NewHealthCheck(e.cfg)
+	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId)
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
 	
 	e.app.HandleMethodNotAllowed = true	

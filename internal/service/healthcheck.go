@@ -8,22 +8,23 @@ type HealthCheck interface {
 }
 
 type healthCheck struct {
-	config model.HealthConfig
+	serviceName 	string
+	instanceID  	string
 }
 
-
 // NewHealthCheck creates and returns a new HealthCheck service instance.
-func NewHealthCheck(cfg model.HealthConfig) HealthCheck {
-	return &healthCheck{config: cfg}
+func NewHealthCheck(serviceName, instanceID string) HealthCheck {
+	return &healthCheck{	
+							serviceName: serviceName,
+							instanceID: instanceID,
+						}
 }
 
 // Check returns the health status report for the service.
-func (hc *healthCheck) Check()*model.HealthReport{
-	serviceName := hc.config.GetServiceName()
-	instanceId := hc.config.GetInstanceId()
+func (hc *healthCheck) Check() *model.HealthReport {
 	return &model.HealthReport{
-					Message:		 "OK", 
-					ServiceName:	 serviceName, 
-					InstanceID: 	 instanceId,
-				}
+		Message:     	"OK",
+		ServiceName:	hc.serviceName,
+		InstanceID:  	hc.instanceID,
+	}
 }

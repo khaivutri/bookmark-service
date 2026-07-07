@@ -10,22 +10,9 @@ import (
 
 
 type Config struct {
-	AppPort 		string 		`default:"8080" envconfig:"APP_PORT"`
-
-	ServiceName 	string		`default:"bookmark_service" envconfig:"SERVICE_NAME"`
-	InstanceId 		string 		`default:"" envconfig:"INSTANCE_ID"`
-
-}
-
-// GetServiceName returns the name of the service.
-func (cfg *Config) GetServiceName() string {
-	return cfg.ServiceName
-}
-
-// GetInstanceId returns the instance ID of the service. 
-func (cfg *Config) GetInstanceId() string {
-	
-	return cfg.InstanceId
+	AppPort     	string 		`default:"8080" envconfig:"APP_PORT"`
+	ServiceName 	string 		`default:"bookmark_service" envconfig:"SERVICE_NAME"`
+	InstanceId  	string 		`default:"" envconfig:"INSTANCE_ID"`
 }
 
 // NewConfig creates a new Config instance and loads the configuration from environment variables or a .env file.
