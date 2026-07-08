@@ -26,12 +26,29 @@ func NewHealthCheck(isHealthy service.HealthCheck) HealthCheck {
 //@Tags Health Check
 //@Accept json
 //@Produce json
-//@Success 200 {object} model.HealthReport	
+//@Success 200 {object} model.HealthReport
+//@Failure 503 {object} model.HealthReport
 //@Router /health-check [get]
 func (hc *healthCheck) HealthCheck(ctx *gin.Context) {
-	report := hc.IsHealthy.Check()
+	report, err := hc.IsHealthy.Check(ctx.Request.Context())
 
-	ctx.JSON(http.StatusOK, report)
+	if report == nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	// err mirrors what's already captured in report.Message / report.Dependencies
+	// (e.g. "DEGRADED" + dependency: {"redis": "DOWN"}). We still return the
+	// full report to the caller instead of masking it behind a generic 500 -
+	// hook up logging here if/when a logger is wired into this handler.
+	if err != nil {
+		_ = err
+	}
+
+	status := http.StatusOK
+	if report.Message != "OK" {
+		status = http.StatusServiceUnavailable
+	}
+
+	ctx.JSON(status, report)
 }
-
-

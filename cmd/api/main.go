@@ -1,6 +1,9 @@
 package main
 
-import "github.com/khaivutri/bookmark-service/internal/api"
+import (
+	"github.com/khaivutri/bookmark-service/internal/api"
+	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
+)
 
 //@title Bookmark Service API
 //@version 1.0
@@ -13,7 +16,11 @@ func main() {
 		panic(err)
 	}
 	
-	engine := api.NewEngine(cfg)
+	redisClient, err := redisPkg.NewClient("")
+	if err != nil {
+		panic(err)
+	}
+	engine := api.NewEngine(cfg, redisClient)
 	err = engine.Start()
 
 	if err != nil {

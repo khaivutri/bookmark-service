@@ -6,7 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/handler"
+	"github.com/khaivutri/bookmark-service/internal/repository"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/redis/go-redis/v9"
 
 	_ "github.com/khaivutri/bookmark-service/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -20,15 +22,18 @@ type Engine interface {
 }
 
 type engine struct {
-	app *gin.Engine
-	cfg *Config
+	app 		*gin.Engine
+	cfg 		*Config
+
+	redis 		*redis.Client
 }
 
 // NewEngine creates and returns a new Engine instance with initialized routes.
-func NewEngine(cfg *Config) Engine{
+func NewEngine(cfg *Config, client *redis.Client) Engine{
 	app := &engine{
 		app : gin.Default(),
 		cfg : cfg,
+		redis : client,
 	}
 	app.initRoutes()
 	return app
@@ -45,7 +50,9 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 	
 func (e *engine) initRoutes(){
-	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId)
+	redisPinger := repository.NewRedisPinger(e.redis)
+	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId, redisPinger )
+	
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
 	
 	e.app.HandleMethodNotAllowed = true	
