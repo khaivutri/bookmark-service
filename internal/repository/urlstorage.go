@@ -33,8 +33,11 @@ func (s *urlStorage) StoreURL(ctx context.Context, code, url string, exp time.Du
 var ErrCodeNotFound = errors.New("code doesn't exist")
 func (s *urlStorage) GetURL(ctx context.Context, code string) (string, error) {
 	url, err := s.redis.Get(context.Background(), code).Result()
-	if err != nil && errors.Is(err, redis.Nil) {
-		return "", ErrCodeNotFound
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", ErrCodeNotFound
+		}
+		return "", err
 	}
 	return url, nil 
 }
