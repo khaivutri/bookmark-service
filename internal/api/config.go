@@ -13,6 +13,7 @@ type Config struct {
 	AppPort     	string 		`default:"8080" envconfig:"APP_PORT"`
 	ServiceName 	string 		`default:"bookmark_service" envconfig:"SERVICE_NAME"`
 	InstanceId  	string 		`default:"" envconfig:"INSTANCE_ID"`
+	LogLevel 		string 		`default:"info" envconfig:"LOG_LEVEL"`
 }
 
 // NewConfig creates a new Config instance and loads the configuration from environment variables or a .env file.
@@ -22,7 +23,7 @@ func NewConfig() (*Config, error) {
 	}
 
 	cfg := &Config{}
-
+	
 	err := envconfig.Process("", cfg)
 	if err != nil {
 		return nil, err

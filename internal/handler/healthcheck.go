@@ -3,8 +3,10 @@ package handler
 import (
 	"net/http"
 
+	"github.com/rs/zerolog/log"
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	
 )
 
 // HealthCheck defines the interface for health check handler.
@@ -33,6 +35,7 @@ func (hc *healthCheck) HealthCheck(ctx *gin.Context) {
 	report, err := hc.IsHealthy.Check(ctx.Request.Context())
 
 	if report == nil {
+		log.Error().Err(err).Str("from", "handler.healthCheck.HealthCheck").Msg("failed to check health")
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
@@ -47,6 +50,7 @@ func (hc *healthCheck) HealthCheck(ctx *gin.Context) {
 
 	status := http.StatusOK
 	if report.Message != "OK" {
+		log.Error().Err(err).Str("from", "handler.healthCheck.HealthCheck").Msg("failed to check health")
 		status = http.StatusServiceUnavailable
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/handler/v1/dto"
 	"github.com/khaivutri/bookmark-service/internal/repository"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/rs/zerolog/log"
 )
 
 type ShortenURL interface {
@@ -45,6 +46,7 @@ func (s *shortenURL) CreateShortenLink(ctx *gin.Context) {
 
 	code, err := s.service.CreateCodeFromLink(ctx.Request.Context(), req.URL, req.Exp)
 	if err != nil {
+		log.Error().Err(err).Str("from", "handler.shortenURL.CreateShortenLink").Msg("failed to code from link")
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
@@ -81,6 +83,7 @@ func (s *shortenURL) Redirect( ctx *gin.Context) {
 			return
 		}
 
+		log.Error().Err(err).Str("from", "handler.shortenURL.Redirect").Msg("failed to get link from code")
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
