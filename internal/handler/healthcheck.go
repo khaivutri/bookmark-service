@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/rs/zerolog/log"
 )
 
 // HealthCheck defines the interface for health check handler.
@@ -26,12 +27,27 @@ func NewHealthCheck(isHealthy service.HealthCheck) HealthCheck {
 //@Tags Health Check
 //@Accept json
 //@Produce json
-//@Success 200 {object} model.HealthReport	
+//@Success 200 {object} model.HealthReport
+//@Failure 503 {object} model.HealthReport
 //@Router /health-check [get]
 func (hc *healthCheck) HealthCheck(ctx *gin.Context) {
-	report := hc.IsHealthy.Check()
+	report, err := hc.IsHealthy.Check(ctx)
 
-	ctx.JSON(http.StatusOK, report)
+	if report == nil {
+		log.Error().Err(err).Str("from", "handler.healthCheck.HealthCheck").Msg("failed to check health")
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	status := http.StatusOK
+	if report.Message != "OK" {
+		status = http.StatusServiceUnavailable
+
+		log.Error().
+			Err(err).
+			Str("from", "handler.healthCheck.HealthCheck").
+			Str("report_message", report.Message).
+			Msg("health check degraded")
+	}
+	ctx.JSON(status, report)
 }
-
-

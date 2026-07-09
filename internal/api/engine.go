@@ -6,7 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/handler"
+	v1 "github.com/khaivutri/bookmark-service/internal/handler/v1"
+	"github.com/khaivutri/bookmark-service/internal/repository"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/khaivutri/bookmark-service/pkg/utils"
+	"github.com/redis/go-redis/v9"
 
 	_ "github.com/khaivutri/bookmark-service/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -20,15 +24,18 @@ type Engine interface {
 }
 
 type engine struct {
-	app *gin.Engine
-	cfg *Config
+	app 		*gin.Engine
+	cfg 		*Config
+
+	redis 		*redis.Client
 }
 
 // NewEngine creates and returns a new Engine instance with initialized routes.
-func NewEngine(cfg *Config) Engine{
+func NewEngine(cfg *Config, client *redis.Client) Engine{
 	app := &engine{
 		app : gin.Default(),
 		cfg : cfg,
+		redis : client,
 	}
 	app.initRoutes()
 	return app
@@ -45,12 +52,25 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 	
 func (e *engine) initRoutes(){
-	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId)
+	redisPinger := repository.NewRedisPinger(e.redis)
+	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId, redisPinger )
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
-	
+
+	urlStorage := repository.NewURLStorage(e.redis)
+	shortenURLSvc := service.NewURLStorage(urlStorage, utils.NewGenCode())
+	shortenURL := v1.NewShortenURL(shortenURLSvc)
 	e.app.HandleMethodNotAllowed = true	
 	
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthCheck.HealthCheck)
+
+	v1 := e.app.Group("/v1") 
+	{
+		links := v1.Group("/links")
+		{
+			links.POST("/shorten", shortenURL.CreateShortenLink)
+			links.GET("/redirect/:code", shortenURL.Redirect)
+		}
+	}
 }
 
