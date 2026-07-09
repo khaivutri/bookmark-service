@@ -47,7 +47,7 @@ func (s *shortenURL) CreateShortenLink(ctx *gin.Context) {
 		return
 	}
 
-	code, err := s.service.CreateCodeFromLink(ctx.Request.Context(), req.URL, req.Exp)
+	code, err := s.service.CreateCodeFromLink(ctx, req.URL, req.Exp)
 	if err != nil {
 		log.Error().Err(err).Str("from", "handler.shortenURL.CreateShortenLink").Msg("failed to code from link")
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
@@ -79,7 +79,7 @@ func (s *shortenURL) Redirect( ctx *gin.Context) {
 		return
 	}
 
-	url, err := s.service.GetLinkFromCode(ctx.Request.Context(), code)
+	url, err := s.service.GetLinkFromCode(ctx, code)
 	if err != nil {
 		if errors.Is(err, repository.ErrCodeNotFound) {
 			ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Code not found"})

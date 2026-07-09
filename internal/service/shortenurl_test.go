@@ -7,6 +7,7 @@ package service
 //   pkg/utils/mocks            (cho utils.GenCode)
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 	repoMocks "github.com/khaivutri/bookmark-service/internal/repository/mocks"
 	utilsMocks "github.com/khaivutri/bookmark-service/pkg/utils/mocks"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,23 +34,23 @@ func TestShortenURL_CreateCodeFromLink(t *testing.T) {
 
 	tests := []struct {
 		name       	string
-		setupMocks 	func(gen *utilsMocks.GenCode, store *repoMocks.URLStorage)
+		setupMocks 	func(ctx context.Context, gen *utilsMocks.GenCode, store *repoMocks.URLStorage)
 		expectedCode   	string
 		expectedErr    	error
 	}{
 		{
 			name: 		"success on first attempt",
-			setupMocks: func(gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
+			setupMocks: func(ctx context.Context, gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
 				gen.On("Generate", CODE_LEN).Return(testCode, nil).Once()
-				store.On("GetURL", mock.Anything, testCode).Return("", repository.ErrCodeNotFound).Once()
-				store.On("StoreURL", mock.Anything, testCode, testURL, time.Duration(testExp)).Return(nil).Once()
+				store.On("GetURL", ctx, testCode).Return("", repository.ErrCodeNotFound).Once()
+				store.On("StoreURL", ctx, testCode, testURL, time.Duration(testExp)).Return(nil).Once()
 			},
 			expectedCode: 	testCode,
 			expectedErr:  	nil,
 		},
 		{
 			name: 		"returns error when generator fails",
-			setupMocks: func(gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
+			setupMocks: func(ctx context.Context, gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
 				gen.On("Generate", CODE_LEN).Return("", errGenFailed).Once()
 			},
 			expectedCode: 	"",
@@ -58,36 +58,36 @@ func TestShortenURL_CreateCodeFromLink(t *testing.T) {
 		},
 		{
 			name: 		"returns error when storage GetURL fails unexpectedly",
-			setupMocks: func(gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
+			setupMocks: func(ctx context.Context, gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
 				gen.On("Generate", CODE_LEN).Return(testCode, nil).Once()
-				store.On("GetURL", mock.Anything, testCode).Return("", errRedisUnexpected).Once()
+				store.On("GetURL", ctx, testCode).Return("", errRedisUnexpected).Once()
 			},
 			expectedCode: "",
 			expectedErr:  errRedisUnexpected,
 		},
 		{
 			name: 		"retries generating code when collision occurs",
-			setupMocks: func(gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
+			setupMocks: func(ctx context.Context, gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
 				const collidedCode = "dup0001"
 
 				// First attempt - col
 				gen.On("Generate", CODE_LEN).Return(collidedCode, nil).Once()
-				store.On("GetURL", mock.Anything, collidedCode).Return("https://old.example.com", nil).Once()
+				store.On("GetURL", ctx, collidedCode).Return("https://old.example.com", nil).Once()
 
 				// Second attempt 
 				gen.On("Generate", CODE_LEN).Return(testCode, nil).Once()
-				store.On("GetURL", mock.Anything, testCode).Return("", repository.ErrCodeNotFound).Once()
-				store.On("StoreURL", mock.Anything, testCode, testURL, time.Duration(testExp)).Return(nil).Once()
+				store.On("GetURL", ctx, testCode).Return("", repository.ErrCodeNotFound).Once()
+				store.On("StoreURL", ctx, testCode, testURL, time.Duration(testExp)).Return(nil).Once()
 			},	
 			expectedCode: 	testCode,
 			expectedErr:  	nil,
 		},
 		{
 			name: 		"returns error when storage StoreURL fails",
-			setupMocks: func(gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
+			setupMocks: func(ctx context.Context, gen *utilsMocks.GenCode, store *repoMocks.URLStorage) {
 				gen.On("Generate", CODE_LEN).Return(testCode, nil).Once()
-				store.On("GetURL", mock.Anything, testCode).Return("", repository.ErrCodeNotFound).Once()
-				store.On("StoreURL", mock.Anything, testCode, testURL, time.Duration(testExp)).Return(errRedisUnexpected).Once()
+				store.On("GetURL", ctx, testCode).Return("", repository.ErrCodeNotFound).Once()
+				store.On("StoreURL", ctx, testCode, testURL, time.Duration(testExp)).Return(errRedisUnexpected).Once()
 			},
 			expectedCode: 	"",
 			expectedErr: 	errRedisUnexpected,
@@ -101,7 +101,7 @@ func TestShortenURL_CreateCodeFromLink(t *testing.T) {
 
 			genMock := utilsMocks.NewGenCode(t)
 			storeMock := repoMocks.NewURLStorage(t)
-			tc.setupMocks(genMock, storeMock)
+			tc.setupMocks(ctx,genMock, storeMock)
 
 			svc := NewURLStorage(storeMock, genMock)
 
@@ -126,30 +126,30 @@ func TestShortenURL_GetLinkFromCode(t *testing.T) {
 
 	tests := []struct {
 		name      		string
-		setupMocks 		func(store *repoMocks.URLStorage)
+		setupMocks 		func(ctx context.Context,store *repoMocks.URLStorage)
 		expectedURL    	string
 		expectedErr   	error
 	}{
 		{
 			name: 			"success",
-			setupMocks: func(store *repoMocks.URLStorage) {
-				store.On("GetURL", mock.Anything, testCode).Return(testURL, nil).Once()
+			setupMocks: func(ctx context.Context, store *repoMocks.URLStorage) {
+				store.On("GetURL", ctx, testCode).Return(testURL, nil).Once()
 			},
 			expectedURL: 	testURL,
 			expectedErr: 	nil,
 		},
 		{
 			name: 			"returns error when code not found",
-			setupMocks: func(store *repoMocks.URLStorage) {
-				store.On("GetURL", mock.Anything, testCode).Return("", repository.ErrCodeNotFound).Once()
+			setupMocks: func(ctx context.Context, store *repoMocks.URLStorage) {
+				store.On("GetURL", ctx, testCode).Return("", repository.ErrCodeNotFound).Once()
 			},
 			expectedURL: 	"",
 			expectedErr: 	repository.ErrCodeNotFound,
 		},
 		{
 			name: 			"returns error when storage fails unexpectedly",
-			setupMocks: func(store *repoMocks.URLStorage) {
-				store.On("GetURL", mock.Anything, testCode).Return("", errRedisUnexpected).Once()
+			setupMocks: func(ctx context.Context, store *repoMocks.URLStorage) {
+				store.On("GetURL", ctx, testCode).Return("", errRedisUnexpected).Once()
 			},
 			expectedURL: 	"",
 			expectedErr: 	errRedisUnexpected,
@@ -162,7 +162,7 @@ func TestShortenURL_GetLinkFromCode(t *testing.T) {
 
 			genMock := utilsMocks.NewGenCode(t)
 			storeMock := repoMocks.NewURLStorage(t)
-			tc.setupMocks(storeMock)
+			tc.setupMocks(ctx, storeMock)
 
 			svc := NewURLStorage(storeMock, genMock)
 

@@ -11,7 +11,6 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestHealthCheck_HealthCheck(t *testing.T) {
@@ -33,7 +32,7 @@ func TestHealthCheck_HealthCheck(t *testing.T) {
 			},
 			setupMockService: func(ctx context.Context) *mocks.HealthCheck {
 				mockSvc := mocks.NewHealthCheck(t)
-				mockSvc.On("Check", mock.Anything).Return(&model.HealthReport{
+				mockSvc.On("Check", ctx).Return(&model.HealthReport{
 					Message:      	"OK",
 					ServiceName:  	"bookmark_service",
 					InstanceID:   	"cbe1a562-596b-45d0-bf8b-a999b23b184a",
@@ -54,7 +53,7 @@ func TestHealthCheck_HealthCheck(t *testing.T) {
 			},
 			setupMockService: func(ctx context.Context) *mocks.HealthCheck {
 				mockSvc := mocks.NewHealthCheck(t)
-				mockSvc.On("Check", mock.Anything).Return(&model.HealthReport{
+				mockSvc.On("Check", ctx).Return(&model.HealthReport{
 					Message:      	"OK",
 					ServiceName:  	"my_service",
 					InstanceID:   	"cbe1a562-596b-45d0-bf8b-a999b23b184a",
@@ -75,7 +74,7 @@ func TestHealthCheck_HealthCheck(t *testing.T) {
 			},
 			setupMockService: func(ctx context.Context) *mocks.HealthCheck {
 				mockSvc := mocks.NewHealthCheck(t)
-				mockSvc.On("Check", mock.Anything).Return(&model.HealthReport{
+				mockSvc.On("Check", ctx).Return(&model.HealthReport{
 					Message:      	"DEGRADED",
 					ServiceName:  	"bookmark_service",
 					InstanceID:   	"cbe1a562-596b-45d0-bf8b-a999b23b184a",
@@ -96,7 +95,7 @@ func TestHealthCheck_HealthCheck(t *testing.T) {
 			},
 			setupMockService: func(ctx context.Context) *mocks.HealthCheck {
 				mockSvc := mocks.NewHealthCheck(t)
-				mockSvc.On("Check", mock.Anything).Return(&model.HealthReport{
+				mockSvc.On("Check", ctx).Return(&model.HealthReport{
 					Message:      	"DEGRADED",
 					ServiceName:  	"bookmark_service",
 					InstanceID:   	"cbe1a562-596b-45d0-bf8b-a999b23b184a",
@@ -154,7 +153,7 @@ func TestHealthCheck_HealthCheck_NilReport(t *testing.T) {
 			ctx.Request = httptest.NewRequest(http.MethodGet, "/health-check", nil)
 
 			mockSvc := mocks.NewHealthCheck(t)
-			mockSvc.On("Check", mock.Anything).Return(nil, tc.checkErr).Once()
+			mockSvc.On("Check", ctx).Return(nil, tc.checkErr).Once()
 
 			testHandler := NewHealthCheck(mockSvc)
 
