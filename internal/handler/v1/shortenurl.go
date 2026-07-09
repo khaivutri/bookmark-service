@@ -11,22 +11,25 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ShortenURL defines the interface for handling URL shortening operations.
 type ShortenURL interface {
 	CreateShortenLink(ctx *gin.Context) 
 	Redirect( ctx *gin.Context)
 }
 
+// shortenURL implements the ShortenURL interface.
 type shortenURL struct {
 	service service.ShortenURL
 }
 
 
+// NewShortenURL creates and returns a new instance of ShortenURL handler.
 func NewShortenURL(service service.ShortenURL) ShortenURL {
 	return &shortenURL{service: service}
 }
 
 
-// CreateShortenLink 
+// CreateShortenLink generates a shortened code for the provided URL and returns it in the response.
 // @Summary      Create Shorten Link
 // @Tags         ShortenURL
 // @Accept       application/json
@@ -57,7 +60,7 @@ func (s *shortenURL) CreateShortenLink(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-// Redirect 
+// Redirect retrieves the original URL from the provided code and performs an HTTP redirect.
 // @Summary      Redirect
 // @Tags         ShortenURL
 // @Accept       application/json

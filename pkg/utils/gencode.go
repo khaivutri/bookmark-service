@@ -7,6 +7,7 @@ import (
 
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+// GenCode interface
 type GenCode interface {
 	Generate(codeLen int) (string, error)
 }
@@ -18,6 +19,7 @@ func NewGenCode() GenCode {
 	return &genCode{}
 }
 
+// Generate generates a random code
 func (g *genCode) Generate(codeLen int) (string, error) {
 	code := make([]byte, codeLen)
 

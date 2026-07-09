@@ -6,6 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// NewClient returns a new redis client
 func NewClient(envPrefix string) (*redis.Client, error) {
 	cfg, err := newConfig(envPrefix)
 	if err != nil {
