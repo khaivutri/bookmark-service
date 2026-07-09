@@ -27,15 +27,176 @@
                         "schema": {
                             "$ref": "#/definitions/model.HealthReport"
                         }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/model.HealthReport"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/links/redirect/{code}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ShortenURL"
+                ],
+                "summary": "Redirect",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/links/shorten": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ShortenURL"
+                ],
+                "summary": "Create Shorten Link",
+                "parameters": [
+                    {
+                        "description": "Shorten URL request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ShortenURLReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Shorten URL response",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ShortenURLRes"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "dto.ShortenURLReq": {
+            "type": "object",
+            "required": [
+                "exp",
+                "url"
+            ],
+            "properties": {
+                "exp": {
+                    "description": "Exp is the expiration time of the shortened URL in seconds.",
+                    "type": "integer",
+                    "minimum": 5
+                },
+                "url": {
+                    "description": "URL is the original URL to shorten.",
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "dto.ShortenURLRes": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Code is the shortened URL code returned to the client.",
+                    "type": "string",
+                    "example": "AbCDeFK"
+                },
+                "message": {
+                    "description": "Message provides a status message for the operation.",
+                    "type": "string",
+                    "example": "Shorten URL generated successfully!"
+                }
+            }
+        },
         "model.HealthReport": {
             "type": "object",
             "properties": {
+                "dependency": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "{\"redis\"": " \"UP\"}"
+                    }
+                },
                 "instance_id": {
                     "type": "string",
                     "example": "cbe1a562-596b-45d0-bf8b-a999b23b184a"
