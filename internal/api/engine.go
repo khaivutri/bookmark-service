@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/khaivutri/bookmark-service/docs"
 	"github.com/khaivutri/bookmark-service/internal/handler"
 	v1 "github.com/khaivutri/bookmark-service/internal/handler/v1"
 	"github.com/khaivutri/bookmark-service/internal/repository"
@@ -61,6 +62,7 @@ func (e *engine) initRoutes(){
 	shortenURL := v1.NewShortenURL(shortenURLSvc)
 	e.app.HandleMethodNotAllowed = true	
 	
+	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthCheck.HealthCheck)
 

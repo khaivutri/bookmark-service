@@ -10,7 +10,6 @@ import (
 //@version 1.0
 //@description This is a simple REST API for a bookmark service.
 //@BasePath /
-//@host localhost:8080
 func main() {
 	cfg, err := api.NewConfig()
 	if err != nil {
