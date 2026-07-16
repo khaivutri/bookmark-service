@@ -263,16 +263,16 @@ Host: localhost:8080
 
 ## Create Short Link
 
-| Method | Endpoint           | Description                          | Success Response |
-| ------ | ------------------ | ------------------------------------ | ---------------- |
+| Method | Endpoint            | Description                          | Success Response |
+| ------ | ------------------- | ------------------------------------ | ---------------- |
 | POST   | `/v1/links/shorten` | Creates a short code for a given URL | `200 OK`         |
 
 ### Request Body
 
-| Field | Type   | Required | Validation               | Description                         |
-| ----- | ------ | -------- | ------------------------ | ----------------------------------- |
-| `url` | string | Yes      | Must be a valid URL      | Original URL to shorten             |
-| `exp` | int64  | Yes      | Must be at least `5`     | Expiration time in seconds          |
+| Field | Type   | Required | Validation           | Description                |
+| ----- | ------ | -------- | -------------------- | -------------------------- |
+| `url` | string | Yes      | Must be a valid URL  | Original URL to shorten    |
+| `exp` | int64  | Yes      | Must be at least `5` | Expiration time in seconds |
 
 ### Example Request
 
@@ -297,7 +297,7 @@ curl -X POST http://localhost:8080/v1/links/shorten \
 
 | Method | Endpoint                    | Description                              | Success Response |
 | ------ | --------------------------- | ---------------------------------------- | ---------------- |
-| GET    | `/v1/links/redirect/{code}`  | Redirects a short code to the stored URL | `302 Found`      |
+| GET    | `/v1/links/redirect/{code}` | Redirects a short code to the stored URL | `302 Found`      |
 
 ### Example Request
 
@@ -340,15 +340,15 @@ The application reads configuration from:
 - Environment variables
 - `.env` file, if available
 
-| Variable         | Default             | Description                                      |
-| ---------------- | ------------------- | ------------------------------------------------ |
-| `APP_PORT`       | `8080`              | HTTP server port                                 |
-| `SERVICE_NAME`   | `bookmark_service`  | Service name returned by the health-check API    |
-| `INSTANCE_ID`    | Auto-generated UUID | Optional instance identifier                     |
-| `LOG_LEVEL`      | `info`              | Log level passed to zerolog                      |
-| `REDIS_ADDRESS`  | `localhost:6379`    | Redis host and port                              |
-| `REDIS_PASSWORD` | empty               | Redis password                                   |
-| `REDIS_DB`       | `0`                 | Redis database number                            |
+| Variable         | Default             | Description                                   |
+| ---------------- | ------------------- | --------------------------------------------- |
+| `APP_PORT`       | `8080`              | HTTP server port                              |
+| `SERVICE_NAME`   | `bookmark_service`  | Service name returned by the health-check API |
+| `INSTANCE_ID`    | Auto-generated UUID | Optional instance identifier                  |
+| `LOG_LEVEL`      | `info`              | Log level passed to zerolog                   |
+| `REDIS_ADDRESS`  | `localhost:6379`    | Redis host and port                           |
+| `REDIS_PASSWORD` | empty               | Redis password                                |
+| `REDIS_DB`       | `0`                 | Redis database number                         |
 
 `INSTANCE_ID` must be a valid UUID when explicitly provided. Invalid values cause startup to fail.
 
@@ -356,20 +356,20 @@ The application reads configuration from:
 
 # Makefile Commands
 
-| Command             | Description                                      |
-| ------------------- | ------------------------------------------------ |
-| `make help`         | Show available targets                           |
-| `make deps`         | Download Go modules                              |
-| `make tidy`         | Clean up Go module dependencies                  |
-| `make test`         | Run tests with coverage report                   |
-| `make swagger`      | Generate Swagger docs                            |
-| `make run`          | Run the application locally                      |
-| `make dev-run`      | Generate Swagger docs, then run the application  |
-| `make docker-up`    | Build and start services with Docker Compose     |
-| `make docker-down`  | Stop Docker Compose services                     |
-| `make docker-logs`  | Follow Docker Compose logs                       |
-| `make docker-redis` | Start only Redis with Docker Compose             |
-| `make clean`        | Remove build and coverage artifacts              |
+| Command             | Description                                     |
+| ------------------- | ----------------------------------------------- |
+| `make help`         | Show available targets                          |
+| `make deps`         | Download Go modules                             |
+| `make tidy`         | Clean up Go module dependencies                 |
+| `make test`         | Run tests with coverage report                  |
+| `make swagger`      | Generate Swagger docs                           |
+| `make run`          | Run the application locally                     |
+| `make dev-run`      | Generate Swagger docs, then run the application |
+| `make docker-up`    | Build and start services with Docker Compose    |
+| `make docker-down`  | Stop Docker Compose services                    |
+| `make docker-logs`  | Follow Docker Compose logs                      |
+| `make docker-redis` | Start only Redis with Docker Compose            |
+| `make clean`        | Remove build and coverage artifacts             |
 
 ---
 
@@ -396,6 +396,30 @@ The test suite includes:
 - Logger level tests
 - Code generator tests
 - Integration tests for health-check and short-link endpoints
+
+---
+
+## CI Pipeline
+
+This project uses GitHub Actions to automate testing and deployment.
+
+**Triggers:**
+
+- Pull requests targeting the `main` branch
+- Pushes to the `main` branch or tags matching `v*.*.*`
+
+**Pipeline steps:**
+
+1. **Checkout code** – fetch the source code from the repository
+2. **Set up Go** – install Go using the version declared in `go.mod`, with caching enabled for faster builds
+3. **Run unit tests** – run `make test` to execute the test suite
+4. **Log in to Docker Hub** _(push only)_ – authenticate with Docker Hub using stored secrets
+5. **Build & push Docker image** _(push only)_ – build the Docker image and push it to Docker Hub with the tag `khaivutri/shorten_link:latest`
+
+**Code security:**
+The repository is integrated with **SonarQube** for static code analysis, helping detect security vulnerabilities, code smells, and coding convention violations early, before code is merged.
+
+> Note: Unit tests always run, while Docker build & push only run on pushes to `main`. Pull requests only run checkout, Go setup, and unit tests.
 
 ---
 
