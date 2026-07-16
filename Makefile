@@ -1,5 +1,20 @@
 .PHONY: help deps tidy test run dev-run clean swagger docker-up docker-down docker-logs docker-redis
 
+GIT_TAG := $(shell git describe --tags --exact-match --abbrev=0 2>/dev/null)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+IMG_TAG := latest
+
+
+IMG_NAME=khaivutri/shorten_url
+
+
+ifneq ($(GIT_TAG),)
+   IMG_TAG := $(GIT_TAG)
+endif
+
+
+export IMG_TAG
+
 GO ?= go
 DOCKER_COMPOSE ?= docker-compose
 MAIN_PATH ?= ./cmd/api
@@ -32,10 +47,19 @@ tidy:
 
 
 COVERAGE_EXCLUDE=mocks|main|test|docs
+COVERAGE_THRESHOLD ?= 80
+
 test:
 	$(GO) test ./... -coverprofile=coverage.tmp -coverpkg=./... -covermode=atomic -p 1
 	grep -vE "$(COVERAGE_EXCLUDE)" coverage.tmp > coverage.out
 	$(GO) tool cover -html=coverage.out -o coverage.html
+	@total=$$($(GO) tool cover -func=coverage.out | grep total: | awk '{print $$3}' | sed 's/%//'); \
+	if [ $$(echo "$$total < $(COVERAGE_THRESHOLD)" | bc -l) -eq 1 ]; then \
+		echo "❌ Coverage ($$total%) is below threshold ($(COVERAGE_THRESHOLD)%)"; \
+		exit 1; \
+	else \
+		echo "✅ Coverage ($$total%) meets threshold ($(COVERAGE_THRESHOLD)%)"; \
+	fi
 
 swagger:
 	swag init -g cmd/api/main.go --output docs
@@ -64,6 +88,24 @@ docker-logs:
 docker-redis:
 	$(DOCKER_COMPOSE) up redis
 
+
+COVERAGE_FOLDER ?= ./test-output
+docker-test:
+	mkdir -p $(COVERAGE_FOLDER)
+	docker buildx build --build-arg COVERAGE_EXCLUDE="$(COVERAGE_EXCLUDE)" --build-arg COVERAGE_THRESHOLD="$(COVERAGE_THRESHOLD)" --progress=plain --target test -t test:test --output ./test-output . 
+
+docker-build:
+	docker build -t $(IMG_NAME):$(IMG_TAG) .
+
+
+DOCKER_USERNAME ?= 
+DOCKER_PASSWORD ?=
+
+docker-login:
+	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+
+docker-release:
+	docker push $(IMG_NAME):$(IMG_TAG)
 clean:
 	rm -rf $(BIN_DIR) coverage.out coverage.html coverage.tmp
 
