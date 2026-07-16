@@ -43,7 +43,6 @@ definitions:
         example: bookmark_service
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: This is a simple REST API for a bookmark service.

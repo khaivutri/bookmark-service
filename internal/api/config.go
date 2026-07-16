@@ -14,6 +14,7 @@ type Config struct {
 	ServiceName 	string 		`default:"bookmark_service" envconfig:"SERVICE_NAME"`
 	InstanceId  	string 		`default:"" envconfig:"INSTANCE_ID"`
 	LogLevel 		string 		`default:"info" envconfig:"LOG_LEVEL"`
+	BasePath 		string 		`default:"/" envconfig:"BASE_PATH"`
 }
 
 // NewConfig creates a new Config instance and loads the configuration from environment variables or a .env file.
