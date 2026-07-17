@@ -1,0 +1,37 @@
+name: CI-Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+
+jobs:
+  ci_pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run unit tests
+        run: make docker-test
+
+      - name: Build image
+        run: make docker-build
+
+      - name: Login to Docker
+        if: ${{ github.event_name != 'pull_request' }}
+        run: make docker-login
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push image
+        if: ${{ github.event_name != 'pull_request' }}
+        run: make docker-release

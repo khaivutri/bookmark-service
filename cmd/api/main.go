@@ -7,7 +7,7 @@ import (
 )
 
 //@title Bookmark Service API
-//@version 1.0
+//@version 1.5
 //@description This is a simple REST API for a bookmark service.
 //@BasePath /
 func main() {
