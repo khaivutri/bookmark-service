@@ -5,7 +5,7 @@ BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 IMG_TAG := latest
 
 
-IMG_NAME=khaivutri/shorten_url
+IMG_NAME=khaivutri/shorten_link
 
 
 ifneq ($(GIT_TAG),)
