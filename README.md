@@ -399,7 +399,7 @@ The test suite includes:
 
 ---
 
-## CI Pipeline
+# CI Pipeline
 
 This project uses GitHub Actions to automate testing and deployment.
 
