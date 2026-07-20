@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/khaivutri/bookmark-service/internal/api"
+	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/pkg/logger"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
+	"github.com/khaivutri/bookmark-service/pkg/sqldb"
 )
 
 //@title Bookmark Service API
@@ -24,8 +26,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	//set database
+	dbClient, err := sqldb.NewClient("")
+	if err != nil {
+		panic(err)
+	}
+	err = dbClient.AutoMigrate(&model.User{})
+	if err != nil {
+		panic(err)
+	}
 	
-	engine := api.NewEngine(cfg, redisClient)
+	engine := api.NewEngine(cfg, redisClient, dbClient)
 	err = engine.Start()
 
 	if err != nil {
