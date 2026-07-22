@@ -45,20 +45,18 @@ const docTemplate = `{
         },
         "/v1/links/redirect/{code}": {
             "get": {
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Resolves a short code and redirects the client to the original URL.",
                 "produces": [
-                    "application/json"
+                    "text/plain"
                 ],
                 "tags": [
                     "ShortenURL"
                 ],
-                "summary": "Redirect",
+                "summary": "Redirect to original URL",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Code",
+                        "description": "Short code",
                         "name": "code",
                         "in": "path",
                         "required": true
@@ -66,12 +64,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "302": {
-                        "description": "Redirect",
+                        "description": "Redirect to the original URL",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -84,7 +79,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Code not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -106,6 +101,7 @@ const docTemplate = `{
         },
         "/v1/links/shorten": {
             "post": {
+                "description": "Creates a unique short code for the given URL and returns it.",
                 "consumes": [
                     "application/json"
                 ],
@@ -132,6 +128,58 @@ const docTemplate = `{
                         "description": "Shorten URL response",
                         "schema": {
                             "$ref": "#/definitions/dto.ShortenURLRes"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/register": {
+            "post": {
+                "description": "Creates a new user account with the provided username, display name, password, and email.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "Register request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Register response",
+                        "schema": {
+                            "$ref": "#/definitions/user.RegisterResponse"
                         }
                     },
                     "400": {
@@ -214,6 +262,77 @@ const docTemplate = `{
                 "service_name": {
                     "type": "string",
                     "example": "bookmark_service"
+                }
+            }
+        },
+        "user.RegisterData": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-07-21T12:34:56Z"
+                },
+                "display_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "7d80f755-7dce-4c95-b8bf-75bb8e240ef2"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-07-21T12:34:56Z"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "user.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "display_name",
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "display_name": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3,
+                    "example": "John Doe"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "Password123@"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3,
+                    "example": "johndoe"
+                }
+            }
+        },
+        "user.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/user.RegisterData"
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         }
