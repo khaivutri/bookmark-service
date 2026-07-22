@@ -161,7 +161,7 @@ func TestHealthCheck_HealthCheck_NilReport(t *testing.T) {
 				testHandler.HealthCheck(ctx)
 			})
 			assert.Equal(t, http.StatusInternalServerError, rec.Code)
-			assert.JSONEq(t, `{"error":"Internal Server Error"}`, rec.Body.String())
+			assert.JSONEq(t, `{"message":"Processing error"}`, rec.Body.String())
 		})
 	}
 }
