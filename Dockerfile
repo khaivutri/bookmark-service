@@ -16,6 +16,7 @@ RUN GOOS=linux go build -tags musl -ldflags "-w -s" -o bookmark-service cmd/api/
 
 FROM base AS test-exec
 
+RUN apk add --no-cache build-base
 ARG _outputdir="/tmp/coverage"
 ARG COVERAGE_EXCLUDE
 ARG COVERAGE_THRESHOLD
