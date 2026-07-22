@@ -25,6 +25,7 @@ This project demonstrates a production-style REST API using:
 
 - Lightweight REST API server
 - Health check endpoint with Redis dependency status
+- User registration endpoint with request validation
 - URL shortening endpoint with TTL support
 - Redirect endpoint for generated short codes
 - Random alphanumeric short-code generation
@@ -46,15 +47,20 @@ bookmark-service/
 ├── internal/
 │   ├── api/                         # API engine and route wiring
 │   ├── handler/                     # HTTP handlers
-│   │   └── v1/                      # Versioned link handlers and DTOs
+│   │   └── v1/                      # Versioned link and user handlers with DTOs
 │   ├── model/                       # Shared response models
-│   ├── repository/                  # Redis-backed persistence adapters
+│   ├── repository/                  # Database and Redis persistence adapters
 │   ├── service/                     # Business logic
-│   └── integration_test/            # Endpoint integration tests
+│   ├── integration_test/            # Endpoint integration tests
+│   └── test/                        # Test fixtures and helpers
 ├── pkg/
+|   ├── dbutils/                     # Handle datbase error
 │   ├── logger/                      # Logging configuration
 │   ├── redis/                       # Redis client, config, and test helper
+|   ├── response                     # handle common error
+│   ├── sqldb/                       # Postgres database client and config
 │   └── utils/                       # Shared utilities
+|   └── validation/                  # Custom validation
 ├── Dockerfile
 ├── docker-compose.yaml
 ├── Makefile
@@ -70,6 +76,7 @@ Before running the project, make sure you have:
 
 - Go 1.26 or newer
 - Redis
+- Postgres
 - Docker and Docker Compose, optional but recommended
 - Git
 - `make`, optional but recommended
@@ -120,30 +127,48 @@ LOG_LEVEL=info
 REDIS_ADDRESS=localhost:6379
 REDIS_PASSWORD=
 REDIS_DB=0
+DB_HOST=localhost
+DB_USER=admin
+DB_PASS=admin
+DB_NAME=bookmark
+DB_PORT=5432
 ```
 
 `INSTANCE_ID` is optional. If omitted or left empty, the application automatically generates a UUID when starting.
 
-When running the app inside Docker Compose, use the Redis service name:
+When running the app inside Docker Compose, use the service hostnames:
 
 ```env
 REDIS_ADDRESS=redis:6379
+DB_HOST=postgres
+DB_USER=admin
+DB_PASS=admin
+DB_NAME=bookmark
+DB_PORT=5432
 ```
 
 ---
 
-## 4. Start Redis
+## 4. Start Redis and Postgres
 
-Start only Redis with Docker Compose:
+Start Redis and Postgres with Docker Compose:
+
+```bash
+make docker-up
+```
+
+If you only need Redis for a local health-check run, use:
 
 ```bash
 make docker-redis
 ```
 
-Or run Redis directly with Docker:
+Or run Redis and Postgres directly with Docker:
 
 ```bash
 docker run --rm --name redis -p 6379:6379 redis:alpine
+
+docker run --rm --name postgres -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=bookmark -p 5432:5432 postgres:alpine
 ```
 
 If a container named `redis` already exists, remove it before starting a new one:
@@ -261,6 +286,78 @@ Host: localhost:8080
 
 ---
 
+## User Registration
+
+| Method | Endpoint             | Description                                    | Success Response |
+| ------ | -------------------- | ---------------------------------------------- | ---------------- |
+| POST   | `/v1/users/register` | Registers a new user and returns user metadata | `201 Created`    |
+
+The register endpoint validates the incoming JSON request and returns detailed error responses for invalid input or duplicate fields.
+
+### Example Request
+
+```http
+POST /v1/users/register HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "display_name": "John Doe",
+  "password": "Password123@",
+  "email": "john.doe@example.com"
+}
+```
+
+### Example Success Response
+
+```json
+{
+  "data": {
+    "id": "7d80f755-7dce-4c95-b8bf-75bb8e240ef2",
+    "username": "johndoe",
+    "display_name": "John Doe",
+    "email": "john.doe@example.com",
+    "created_at": "2026-07-22T11:00:00Z",
+    "updated_at": "2026-07-22T11:00:00Z"
+  },
+  "message": "User registered successfully!"
+}
+```
+
+### Example Validation Error Response
+
+```json
+{
+  "message": "Invalid input",
+  "details": ["username is invalid (min)", "password is invalid (password)"]
+}
+```
+
+### Example Duplicate Field Responses
+
+```json
+{
+  "message": "username already exists"
+}
+```
+
+```json
+{
+  "message": "email already exists"
+}
+```
+
+### Example Internal Error Response
+
+```json
+{
+  "message": "Processing error"
+}
+```
+
+---
+
 ## Create Short Link
 
 | Method | Endpoint            | Description                          | Success Response |
@@ -356,20 +453,26 @@ The application reads configuration from:
 
 # Makefile Commands
 
-| Command             | Description                                     |
-| ------------------- | ----------------------------------------------- |
-| `make help`         | Show available targets                          |
-| `make deps`         | Download Go modules                             |
-| `make tidy`         | Clean up Go module dependencies                 |
-| `make test`         | Run tests with coverage report                  |
-| `make swagger`      | Generate Swagger docs                           |
-| `make run`          | Run the application locally                     |
-| `make dev-run`      | Generate Swagger docs, then run the application |
-| `make docker-up`    | Build and start services with Docker Compose    |
-| `make docker-down`  | Stop Docker Compose services                    |
-| `make docker-logs`  | Follow Docker Compose logs                      |
-| `make docker-redis` | Start only Redis with Docker Compose            |
-| `make clean`        | Remove build and coverage artifacts             |
+## Makefile Commands
+
+| Command               | Description                                          |
+| --------------------- | ---------------------------------------------------- |
+| `make help`           | Show available Makefile targets                      |
+| `make deps`           | Download Go module dependencies                      |
+| `make tidy`           | Clean up Go module dependencies                      |
+| `make test`           | Run all tests with coverage report                   |
+| `make run`            | Run the application locally                          |
+| `make clean`          | Remove build artifacts and coverage files            |
+| `make swagger`        | Generate Swagger documentation                       |
+| `make dev-run`        | Generate Swagger docs and run the application        |
+| `make docker-up`      | Build and start services with Docker Compose         |
+| `make docker-down`    | Stop Docker Compose services                         |
+| `make docker-logs`    | Follow Docker Compose logs                           |
+| `make docker-redis`   | Start only Redis with Docker Compose                 |
+| `make docker-test`    | Run tests inside Docker and generate coverage report |
+| `make docker-build`   | Build the Docker image                               |
+| `make docker-login`   | Log in to a Docker registry                          |
+| `make docker-release` | Push the Docker image to the registry                |
 
 ---
 

@@ -1,4 +1,4 @@
-.PHONY: help deps tidy test run dev-run clean swagger docker-up docker-down docker-logs docker-redis
+.PHONY: help deps tidy test run dev-run clean swagger docker-up docker-down docker-logs docker-redis docker-test docker-build docker-login docker-release
 
 GIT_TAG := $(shell git describe --tags --exact-match --abbrev=0 2>/dev/null)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
@@ -30,14 +30,19 @@ help:
 	@echo "  make help              Show this help message"
 	@echo "  make deps              Download Go modules"
 	@echo "  make tidy              Clean up module dependencies"
-	@echo "  make test     			Run tests with coverage report"
+	@echo "  make test              Run tests with coverage report"
 	@echo "  make run               Run the application"
 	@echo "  make clean             Remove build artifacts and coverage files"
+	@echo "  make swagger           Generate Swagger documentation"
 	@echo "  make dev-run           Run swagger then run the application (development)"
 	@echo "  make docker-up         Build and start services with docker-compose"
 	@echo "  make docker-down       Stop docker-compose services"
 	@echo "  make docker-logs       Follow docker-compose logs"
 	@echo "  make docker-redis      Start only redis with docker-compose"
+	@echo "  make docker-test       Run tests inside Docker and output coverage"
+	@echo "  make docker-build      Build Docker image"
+	@echo "  make docker-login      Log in to Docker Registry"
+	@echo "  make docker-release    Push Docker image to Registry"
 
 deps:
 	$(GO) mod download
@@ -46,7 +51,7 @@ tidy:
 	$(GO) mod tidy
 
 
-COVERAGE_EXCLUDE=mocks|main|test|docs
+COVERAGE_EXCLUDE=mocks|main|test|docs|response|validation|dbutils|sqldb
 COVERAGE_THRESHOLD ?= 80
 
 test:

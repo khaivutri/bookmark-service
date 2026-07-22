@@ -43,6 +43,58 @@ definitions:
         example: bookmark_service
         type: string
     type: object
+  user.RegisterData:
+    properties:
+      created_at:
+        example: "2026-07-21T12:34:56Z"
+        type: string
+      display_name:
+        example: John Doe
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 7d80f755-7dce-4c95-b8bf-75bb8e240ef2
+        type: string
+      updated_at:
+        example: "2026-07-21T12:34:56Z"
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  user.RegisterRequest:
+    properties:
+      display_name:
+        example: John Doe
+        maxLength: 20
+        minLength: 3
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      password:
+        example: Password123@
+        type: string
+      username:
+        example: johndoe
+        maxLength: 20
+        minLength: 3
+        type: string
+    required:
+    - display_name
+    - email
+    - password
+    - username
+    type: object
+  user.RegisterResponse:
+    properties:
+      data:
+        $ref: '#/definitions/user.RegisterData'
+      message:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is a simple REST API for a bookmark service.
@@ -69,23 +121,21 @@ paths:
       - Health Check
   /v1/links/redirect/{code}:
     get:
-      consumes:
-      - application/json
+      description: Resolves a short code and redirects the client to the original
+        URL.
       parameters:
-      - description: Code
+      - description: Short code
         in: path
         name: code
         required: true
         type: string
       produces:
-      - application/json
+      - text/plain
       responses:
         "302":
-          description: Redirect
+          description: Redirect to the original URL
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -93,7 +143,7 @@ paths:
               type: string
             type: object
         "404":
-          description: Not Found
+          description: Code not found
           schema:
             additionalProperties:
               type: string
@@ -104,13 +154,14 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Redirect
+      summary: Redirect to original URL
       tags:
       - ShortenURL
   /v1/links/shorten:
     post:
       consumes:
       - application/json
+      description: Creates a unique short code for the given URL and returns it.
       parameters:
       - description: Shorten URL request
         in: body
@@ -140,4 +191,39 @@ paths:
       summary: Create Shorten Link
       tags:
       - ShortenURL
+  /v1/users/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided username, display
+        name, password, and email.
+      parameters:
+      - description: Register request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Register response
+          schema:
+            $ref: '#/definitions/user.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - User
 swagger: "2.0"

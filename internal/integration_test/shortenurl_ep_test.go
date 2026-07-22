@@ -26,6 +26,7 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 
 		expectedStatusCode int
 		expectedResponse   string
+		expectedMessage    string
 	}{
 		{
 			name:               "creates shorten url successfully",
@@ -40,7 +41,7 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 			reqPath:            "/v1/links/shorten",
 			reqBody:            `{"url":"invalid-url","exp":3600}`,
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   `{"error":"Invalid input"}`,
+			expectedMessage:    "Invalid input",
 		},
 		{
 			name:               "returns bad request when expiration is too short",
@@ -48,7 +49,7 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 			reqPath:            "/v1/links/shorten",
 			reqBody:            `{"url":"https://example.com","exp":4}`,
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   `{"error":"Invalid input"}`,
+			expectedMessage:    "Invalid input",
 		},
 		{
 			name:               "returns internal server error when redis is down",
@@ -57,7 +58,7 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 			reqBody:            `{"url":"https://example.com","exp":3600}`,
 			simulateRedisDown:  true,
 			expectedStatusCode: http.StatusInternalServerError,
-			expectedResponse:   `{"error":"Internal Server Error"}`,
+			expectedResponse:   `{"message":"Processing error"}`,
 		},
 		{
 			name:               "returns method not allowed for get request",
@@ -87,7 +88,7 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 				require.NoError(t, redisClient.Close())
 			}
 
-			testAPI := api.NewEngine(cfg, redisClient)
+			testAPI := api.NewEngine(cfg, redisClient, nil)
 
 			req := httptest.NewRequest(tc.reqMethod, tc.reqPath, bytes.NewBufferString(tc.reqBody))
 			req.Header.Set("Content-Type", "application/json")
@@ -96,6 +97,15 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 			testAPI.ServeHTTP(recorder, req)
 
 			assert.Equal(t, tc.expectedStatusCode, recorder.Code)
+
+			if tc.expectedMessage != "" {
+				var body struct {
+					Message string `json:"message"`
+				}
+				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &body))
+				assert.Equal(t, tc.expectedMessage, body.Message)
+				return
+			}
 
 			if tc.expectedResponse != "" {
 				assert.JSONEq(t, tc.expectedResponse, recorder.Body.String())
@@ -120,15 +130,15 @@ func TestShortenURLEndpoint_CreateThenRedirect(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		createBody                 	string
-		redirectPath               	string 
+		createBody               string
+		redirectPath             string
 
-		closeRedisBeforeRedirect   	bool
+		closeRedisBeforeRedirect bool
 
-		expectedCreateStatusCode   	int
-		expectedRedirectStatusCode 	int
-		expectedLocation           	string
-		expectedRedirectResponse   	string
+		expectedCreateStatusCode   int
+		expectedRedirectStatusCode int
+		expectedLocation           string
+		expectedRedirectResponse   string
 	}{
 		{
 			name:                       "creates shorten url then redirects successfully",
@@ -149,7 +159,7 @@ func TestShortenURLEndpoint_CreateThenRedirect(t *testing.T) {
 			closeRedisBeforeRedirect:   true,
 			expectedCreateStatusCode:   http.StatusOK,
 			expectedRedirectStatusCode: http.StatusInternalServerError,
-			expectedRedirectResponse:   `{"error":"Internal Server Error"}`,
+			expectedRedirectResponse:   `{"message":"Processing error"}`,
 		},
 	}
 
@@ -162,7 +172,7 @@ func TestShortenURLEndpoint_CreateThenRedirect(t *testing.T) {
 			require.NoError(t, err)
 
 			redisClient := redisPkg.InitMockRedis(t)
-			testAPI := api.NewEngine(cfg, redisClient)
+			testAPI := api.NewEngine(cfg, redisClient, nil)
 
 			redirectPath := tc.redirectPath
 			if tc.createBody != "" {
