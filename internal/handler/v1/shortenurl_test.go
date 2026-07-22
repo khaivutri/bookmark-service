@@ -2,6 +2,7 @@ package v1
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/repository"
 	mockShortenURL "github.com/khaivutri/bookmark-service/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestShortenURL_CreateShortenLink(t *testing.T) {
@@ -21,7 +21,7 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		setupMockSvc       func(t *testing.T) *mockShortenURL.ShortenURL
+		setupMockSvc       func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL
 		setupTestRequest   func(ctx *gin.Context)
 		expectedStatusCode int
 		expectedResponse   string
@@ -30,9 +30,9 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 		{
 			name: "normal case",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				mockSvc := mockShortenURL.NewShortenURL(t)
-				mockSvc.On("CreateCodeFromLink", mock.Anything, "https://example.com", int64(3600)).Return("abc1234", nil).Once()
+				mockSvc.On("CreateCodeFromLink", ctx, "https://example.com", int64(3600)).Return("abc1234", nil).Once()
 				return mockSvc
 			},
 
@@ -48,7 +48,7 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 		{
 			name: "returns error when input is invalid",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				return mockShortenURL.NewShortenURL(t)
 			},
 
@@ -64,9 +64,9 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 		{
 			name: "returns error when service fails",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				mockSvc := mockShortenURL.NewShortenURL(t)
-				mockSvc.On("CreateCodeFromLink", mock.Anything, "https://example.com", int64(3600)).Return("", errors.New("service error")).Once()
+				mockSvc.On("CreateCodeFromLink", ctx, "https://example.com", int64(3600)).Return("", errors.New("service error")).Once()
 				return mockSvc
 			},
 
@@ -89,7 +89,7 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(rec)
 			tc.setupTestRequest(ctx)
 
-			mockSvc := tc.setupMockSvc(t)
+			mockSvc := tc.setupMockSvc(ctx, t)
 			testHandler := NewShortenURL(mockSvc)
 
 			testHandler.CreateShortenLink(ctx)
@@ -113,21 +113,21 @@ func TestShortenURL_Redirect(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name string
+		name 				string
 
-		setupMockSvc     func(t *testing.T) *mockShortenURL.ShortenURL
-		setupTestRequest func(ctx *gin.Context)
+		setupMockSvc     	func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL
+		setupTestRequest 	func(ctx *gin.Context)
 
-		expectedStatusCode int
-		expectedLocation   string
-		expectedResponse   string
+		expectedStatusCode 	int
+		expectedLocation   	string
+		expectedResponse   	string
 	}{
 		{
 			name: "normal case",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				mockSvc := mockShortenURL.NewShortenURL(t)
-				mockSvc.On("GetLinkFromCode", mock.Anything, "abc1234").Return("https://example.com", nil).Once()
+				mockSvc.On("GetLinkFromCode", ctx, "abc1234").Return("https://example.com", nil).Once()
 				return mockSvc
 			},
 
@@ -142,7 +142,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 		{
 			name: "returns error when code is empty",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				return mockShortenURL.NewShortenURL(t)
 			},
 
@@ -157,9 +157,9 @@ func TestShortenURL_Redirect(t *testing.T) {
 		{
 			name: "returns error when code not found",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				mockSvc := mockShortenURL.NewShortenURL(t)
-				mockSvc.On("GetLinkFromCode", mock.Anything, "abc1234").Return("", repository.ErrCodeNotFound).Once()
+				mockSvc.On("GetLinkFromCode", ctx, "abc1234").Return("", repository.ErrCodeNotFound).Once()
 				return mockSvc
 			},
 
@@ -174,9 +174,9 @@ func TestShortenURL_Redirect(t *testing.T) {
 		{
 			name: "returns error when service fails",
 
-			setupMockSvc: func(t *testing.T) *mockShortenURL.ShortenURL {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockShortenURL.ShortenURL {
 				mockSvc := mockShortenURL.NewShortenURL(t)
-				mockSvc.On("GetLinkFromCode", mock.Anything, "abc1234").Return("", errors.New("service error")).Once()
+				mockSvc.On("GetLinkFromCode", ctx, "abc1234").Return("", errors.New("service error")).Once()
 				return mockSvc
 			},
 
@@ -198,7 +198,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(rec)
 			tc.setupTestRequest(ctx)
 
-			mockSvc := tc.setupMockSvc(t)
+			mockSvc := tc.setupMockSvc(ctx, t)
 
 			testHandler := NewShortenURL(mockSvc)
 

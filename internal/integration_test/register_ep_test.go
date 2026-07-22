@@ -8,10 +8,8 @@ import (
 	"testing"
 
 	"github.com/khaivutri/bookmark-service/internal/api"
-	"github.com/khaivutri/bookmark-service/internal/model"
 	fixture "github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
-	"github.com/khaivutri/bookmark-service/pkg/sqldb"
 	"github.com/khaivutri/bookmark-service/pkg/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,24 +18,26 @@ import (
 
 func TestUserRegisterEndpoint(t *testing.T) {
     testCases := []struct {
-        name string
+        name                        string
 
-        reqMethod string
-        reqPath string
-        reqBody string
+        reqMethod                   string
+        reqPath                     string
+        reqBody                     string
 
-        useUserCommonFixture bool
-        closeDBBeforeReq bool
+        setupDB                     func(t *testing.T) *gorm.DB
 
-        expectedStatusCode int
-        expectedMessage string
-        expectedResponse string
+        expectedStatusCode          int
+        expectedMessage             string
+        expectedResponse            string
     }{
         {
             name: "201 - registers user successfully",
             reqMethod: http.MethodPost,
             reqPath: "/v1/users/register",
             reqBody: `{"username":"johndoe","display_name":"John Doe","password":"Password123@","email":"john.doe@example.com"}`,
+            setupDB: func(t *testing.T) *gorm.DB {
+                return fixture.NewFixture(t, &fixture.UserCommonTest{})
+            },
             expectedStatusCode: http.StatusCreated,
             expectedMessage: "User registered successfully!",
         },
@@ -46,6 +46,9 @@ func TestUserRegisterEndpoint(t *testing.T) {
             reqMethod: http.MethodPost,
             reqPath: "/v1/users/register",
             reqBody: `{}`,
+            setupDB: func(t *testing.T) *gorm.DB {
+                return fixture.NewFixture(t, &fixture.UserCommonTest{})
+            },
             expectedStatusCode: http.StatusBadRequest,
             expectedMessage: "Invalid input",
         },
@@ -54,7 +57,9 @@ func TestUserRegisterEndpoint(t *testing.T) {
             reqMethod: http.MethodPost,
             reqPath: "/v1/users/register",
             reqBody: `{"username":"test1","display_name":"Test User","password":"Password123@","email":"new@example.com"}`,
-            useUserCommonFixture: true,
+            setupDB: func(t *testing.T) *gorm.DB {
+                return fixture.NewFixture(t, &fixture.UserCommonTest{})
+            },
             expectedStatusCode: http.StatusConflict,
             expectedMessage: "username already exists",
         },
@@ -63,7 +68,9 @@ func TestUserRegisterEndpoint(t *testing.T) {
             reqMethod: http.MethodPost,
             reqPath: "/v1/users/register",
             reqBody: `{"username":"newname","display_name":"Test User","password":"Password123@","email":"test2@example.com"}`,
-            useUserCommonFixture: true,
+            setupDB: func(t *testing.T) *gorm.DB {
+                return fixture.NewFixture(t, &fixture.UserCommonTest{})
+            },
             expectedStatusCode: http.StatusConflict,
             expectedMessage: "email already exists",
         },
@@ -72,7 +79,13 @@ func TestUserRegisterEndpoint(t *testing.T) {
             reqMethod: http.MethodPost,
             reqPath: "/v1/users/register",
             reqBody: `{"username":"johndoe","display_name":"John Doe","password":"Password123@","email":"john.doe@example.com"}`,
-            closeDBBeforeReq: true,
+            setupDB: func(t *testing.T) *gorm.DB {
+                db := fixture.NewFixture(t, &fixture.UserCommonTest{})
+                sqlDB, err := db.DB()
+                require.NoError(t, err)
+                require.NoError(t, sqlDB.Close())
+                return db
+            },
             expectedStatusCode: http.StatusInternalServerError,
             expectedResponse: `{"message":"Processing error"}`,
         },
@@ -91,20 +104,7 @@ func TestUserRegisterEndpoint(t *testing.T) {
 
             redisClient := redisPkg.InitMockRedis(t)
 
-            var db *gorm.DB
-            if tc.useUserCommonFixture {
-                db = fixture.NewFixture(t, &fixture.UserCommonTest{})
-            } else {
-                db = sqldb.InitMockDB(t)
-                // migrate user model
-                require.NoError(t, db.AutoMigrate(&model.User{}))
-            }
-
-            if tc.closeDBBeforeReq {
-                sqlDB, derr := db.DB()
-                require.NoError(t, derr)
-                require.NoError(t, sqlDB.Close())
-            }
+            db := tc.setupDB(t)
 
             testAPI := api.NewEngine(cfg, redisClient, db)
 
@@ -129,12 +129,17 @@ func TestUserRegisterEndpoint(t *testing.T) {
             }
 
             if tc.expectedStatusCode == http.StatusCreated {
-                var resp struct{
+                var req struct {
+                    Username string `json:"username"`
+                }
+                require.NoError(t, json.Unmarshal([]byte(tc.reqBody), &req))
+
+                var resp struct {
                     Data struct{ Username string `json:"username"` } `json:"data"`
                     Message string `json:"message"`
                 }
                 require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
-                assert.Equal(t, "johndoe", resp.Data.Username)
+                assert.Equal(t, req.Username, resp.Data.Username)
                 assert.Equal(t, "User registered successfully!", resp.Message)
             }
         })

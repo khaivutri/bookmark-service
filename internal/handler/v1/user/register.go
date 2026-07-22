@@ -3,7 +3,6 @@ package user
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -55,8 +54,8 @@ func (u *userHandler) Register(ctx *gin.Context) {
 			Username: user.UserName,
 			DisplayName: user.DisplayName,
 			Email: user.Email,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
 		},
 		Message: "User registered successfully!",
 	}

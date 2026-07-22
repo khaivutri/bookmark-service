@@ -19,12 +19,12 @@ func filterDuplicateUserName(err error) (bool, error) {
 	// PostgreSQL
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return pgErr.ConstraintName == "uni_users_user_name", ErrDuplicateUserName
+		return pgErr.ConstraintName == "uni_users_username" || pgErr.ConstraintName == "uni_users_uusername", ErrDuplicateUserName
 	}
-	// SQLite: "UNIQUE constraint failed: users.user_name"
+	// SQLite: "UNIQUE constraint failed: users.username" or "UNIQUE constraint failed: users.user_name"
 	msg := strings.ToLower(err.Error())
 	return strings.Contains(msg, "unique constraint failed") &&
-		strings.Contains(msg, "users.user_name"), ErrDuplicateUserName
+		(strings.Contains(msg, "users.username") || strings.Contains(msg, "users.user_name")), ErrDuplicateUserName
 }
 
 func filterDuplicateEmail(err error) (bool, error) {

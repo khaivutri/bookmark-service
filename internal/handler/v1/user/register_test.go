@@ -2,6 +2,7 @@ package user
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 	"github.com/khaivutri/bookmark-service/pkg/validation"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
@@ -41,7 +41,7 @@ func TestUserHandler_Register(t *testing.T) {
 	testCases := []struct {
 		name 				string
 
-		setupMockSvc     	func(t *testing.T) *mockSvc.Service
+		setupMockSvc     	func(ctx context.Context, t *testing.T) *mockSvc.Service
 		setupTestRequest 	func(ctx *gin.Context)
 
 		expectedStatusCode 	int
@@ -54,11 +54,11 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "201 – registers user successfully",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context,t *testing.T) *mockSvc.Service {
 				svc := mockSvc.NewService(t)
 				svc.On(
 					"CreateUser",
-					mock.Anything,
+					ctx,
 					"johndoe", "John Doe", "Password123@", "john.doe@example.com",
 				).Return(stubUser, nil).Once()
 				return svc
@@ -82,7 +82,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – missing required fields (empty body)",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t) // no calls expected
 			},
 
@@ -98,7 +98,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – username too short (< 3 chars)",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context ,t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -116,7 +116,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – username too long (> 20 chars)",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -134,7 +134,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – invalid email format",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context ,t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -152,7 +152,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – password missing special character",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context ,t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -170,7 +170,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – password missing uppercase letter",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -188,7 +188,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – malformed JSON body",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -208,11 +208,11 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "409 – username already exists",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				svc := mockSvc.NewService(t)
 				svc.On(
 					"CreateUser",
-					mock.Anything,
+					ctx,
 					"johndoe", "John Doe", "Password123@", "john.doe@example.com",
 				).Return(nil, dbutils.ErrDuplicateUserName).Once()
 				return svc
@@ -232,11 +232,11 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "409 – email already exists",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				svc := mockSvc.NewService(t)
 				svc.On(
 					"CreateUser",
-					mock.Anything,
+					ctx,
 					"johndoe", "John Doe", "Password123@", "john.doe@example.com",
 				).Return(nil, dbutils.ErrDuplicateEmail).Once()
 				return svc
@@ -260,11 +260,11 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "500 – service returns unexpected error",
 
-			setupMockSvc: func(t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context,t *testing.T) *mockSvc.Service {
 				svc := mockSvc.NewService(t)
 				svc.On(
 					"CreateUser",
-					mock.Anything,
+					ctx,
 					"johndoe", "John Doe", "Password123@", "john.doe@example.com",
 				).Return(nil, errors.New("database connection lost")).Once()
 				return svc
@@ -291,7 +291,7 @@ func TestUserHandler_Register(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(rec)
 			tc.setupTestRequest(ctx)
 
-			svc := tc.setupMockSvc(t)
+			svc := tc.setupMockSvc(ctx, t)
 			handler := NewHandler(svc)
 
 			handler.Register(ctx)
