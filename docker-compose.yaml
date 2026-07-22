@@ -17,3 +17,13 @@ services:
       - redis
     environment:
       - REDIS_ADDRESS=redis:6379
+
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=bookmark
