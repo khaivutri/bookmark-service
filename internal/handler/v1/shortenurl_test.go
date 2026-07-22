@@ -2,6 +2,7 @@ package v1
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -24,6 +25,7 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 		setupTestRequest   func(ctx *gin.Context)
 		expectedStatusCode int
 		expectedResponse   string
+		expectedMessage    string
 	}{
 		{
 			name: "normal case",
@@ -57,7 +59,7 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 			},
 
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   `{"error":"Invalid input"}`,
+			expectedMessage:    "Invalid input",
 		},
 		{
 			name: "returns error when service fails",
@@ -75,7 +77,7 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 			},
 
 			expectedStatusCode: http.StatusInternalServerError,
-			expectedResponse:   `{"error":"Internal Server Error"}`,
+			expectedResponse:   `{"message":"Processing error"}`,
 		},
 	}
 
@@ -93,7 +95,16 @@ func TestShortenURL_CreateShortenLink(t *testing.T) {
 			testHandler.CreateShortenLink(ctx)
 
 			assert.Equal(t, tc.expectedStatusCode, rec.Code)
-			assert.JSONEq(t, tc.expectedResponse, rec.Body.String())
+
+			if tc.expectedMessage != "" {
+				var body struct {
+					Message string `json:"message"`
+				}
+				assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+				assert.Equal(t, tc.expectedMessage, body.Message)
+			} else {
+				assert.JSONEq(t, tc.expectedResponse, rec.Body.String())
+			}
 		})
 	}
 }
@@ -141,7 +152,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 			},
 
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   `{"error":"Invalid input"}`,
+			expectedResponse:   `{"message":"Invalid input"}`,
 		},
 		{
 			name: "returns error when code not found",
@@ -175,7 +186,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 			},
 
 			expectedStatusCode: http.StatusInternalServerError,
-			expectedResponse:   `{"error":"Internal Server Error"}`,
+			expectedResponse:   `{"message":"Processing error"}`,
 		},
 	}
 

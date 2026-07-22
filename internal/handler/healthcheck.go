@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/khaivutri/bookmark-service/pkg/response"
 	"github.com/rs/zerolog/log"
 )
 
@@ -35,7 +36,7 @@ func (hc *healthCheck) HealthCheck(ctx *gin.Context) {
 
 	if report == nil {
 		log.Error().Err(err).Str("from", "handler.healthCheck.HealthCheck").Msg("failed to check health")
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerErrResponse)
 		return
 	}
 

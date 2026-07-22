@@ -122,7 +122,7 @@ func TestHealthCheckEndpoint(t *testing.T) {
 				assert.NoError(t, redisClient.Close())
 			}
 
-			testAPI := api.NewEngine(cfg, redisClient)
+			testAPI := api.NewEngine(cfg, redisClient, nil)
 
 			req, _ := http.NewRequest(tc.reqMethod, tc.reqPath, nil)
 			recorder := httptest.NewRecorder()

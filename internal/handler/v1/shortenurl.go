@@ -8,6 +8,7 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/handler/v1/dto"
 	"github.com/khaivutri/bookmark-service/internal/repository"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/khaivutri/bookmark-service/pkg/response"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,8 +30,9 @@ func NewShortenURL(service service.ShortenURL) ShortenURL {
 }
 
 
-// CreateShortenLink generates a shortened code for the provided URL and returns it in the response.
+// CreateShortenLink generates a shortened code for the provided URL.
 // @Summary      Create Shorten Link
+// @Description  Creates a unique short code for the given URL and returns it.
 // @Tags         ShortenURL
 // @Accept       application/json
 // @Produce      application/json
@@ -43,14 +45,14 @@ func (s *shortenURL) CreateShortenLink(ctx *gin.Context) {
 	var req dto.ShortenURLReq
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, response.InputFieldErrorResponse(err))
 		return
 	}
 
 	code, err := s.service.CreateCodeFromLink(ctx, req.URL, req.Exp)
 	if err != nil {
 		log.Error().Err(err).Str("from", "handler.shortenURL.CreateShortenLink").Msg("failed to code from link")
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerErrResponse)
 		return
 	}
 	
@@ -59,23 +61,23 @@ func (s *shortenURL) CreateShortenLink(ctx *gin.Context) {
 								}
 	ctx.JSON(http.StatusOK, response)
 }
-
-// Redirect retrieves the original URL from the provided code and performs an HTTP redirect.
-// @Summary      Redirect
+// Redirect retrieves the original URL associated with the provided short code
+// and redirects the client to that URL.
+// @Summary      Redirect to original URL
+// @Description  Resolves a short code and redirects the client to the original URL.
 // @Tags         ShortenURL
-// @Accept       application/json
-// @Produce      application/json
-// @Param        code  path     string    	true  	"Code"
-// @Success      302  {object}  map[string]string  	"Redirect"
-// @Failure      400  {object}  map[string]string  	"Bad Request"
-// @Failure      404  {object}  map[string]string  	"Not Found"
-// @Failure      500  {object}  map[string]string  	"Internal Server Error"
+// @Produce      plain
+// @Param        code  path      string  true  "Short code"
+// @Success      302   {string}  string  "Redirect to the original URL"
+// @Failure      400   {object}  map[string]string  "Bad Request"
+// @Failure      404   {object}  map[string]string  "Code not found"
+// @Failure      500   {object}  map[string]string  "Internal Server Error"
 // @Router       /v1/links/redirect/{code} [get]
 func (s *shortenURL) Redirect( ctx *gin.Context) {
 	code := ctx.Param("code")
 
 	if code == "" {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, response.InputErrResponse)
 		return
 	}
 
@@ -87,7 +89,7 @@ func (s *shortenURL) Redirect( ctx *gin.Context) {
 		}
 
 		log.Error().Err(err).Str("from", "handler.shortenURL.Redirect").Msg("failed to get link from code")
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerErrResponse)
 		return
 	}
 	
