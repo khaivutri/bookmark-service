@@ -21,7 +21,7 @@ func filterDuplicateUserName(err error) (bool, error) {
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 		return pgErr.ConstraintName == "uni_users_user_name", ErrDuplicateUserName
 	}
-	// SQLite: "UNIQUE constraint failed: users.username"
+	// SQLite: "UNIQUE constraint failed: users.user_name"
 	msg := strings.ToLower(err.Error())
 	return strings.Contains(msg, "unique constraint failed") &&
 		strings.Contains(msg, "users.user_name"), ErrDuplicateUserName
