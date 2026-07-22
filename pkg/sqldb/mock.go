@@ -13,7 +13,6 @@ func InitMockDB(t *testing.T) *gorm.DB{
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
-	
 	if err != nil {
 		t.Fatalf("Fail to create test db: %v", err)
 	}
