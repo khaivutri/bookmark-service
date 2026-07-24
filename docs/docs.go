@@ -248,7 +248,8 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": {
-                        "{\"redis\"": " \"UP\"}"
+                        " \"postgres\"": " \"UP\"}",
+                        "{\"redis\"": " \"UP\""
                     }
                 },
                 "instance_id": {

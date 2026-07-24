@@ -31,7 +31,8 @@ definitions:
         additionalProperties:
           type: string
         example:
-          '{"redis"': ' "UP"}'
+          ' "postgres"': ' "UP"}'
+          '{"redis"': ' "UP"'
         type: object
       instance_id:
         example: cbe1a562-596b-45d0-bf8b-a999b23b184a
