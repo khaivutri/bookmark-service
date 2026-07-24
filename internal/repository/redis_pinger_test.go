@@ -12,7 +12,7 @@ func TestRedisPinger_Ping(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupPinger func(t *testing.T) *RedisPinger
-		ctx         context.Context
+		cancelCtx   bool
 		wantErr     bool
 	}{
 		{
@@ -35,21 +35,19 @@ func TestRedisPinger_Ping(t *testing.T) {
 			setupPinger: func(t *testing.T) *RedisPinger {
 				return NewRedisPinger(redisPkg.InitMockRedis(t))
 			},
-			ctx: func() context.Context {
-				ctx, cancel := context.WithCancel(context.Background())
-				cancel()
-				return ctx
-			}(),
-			wantErr: true,
+			cancelCtx: true,
+			wantErr:   true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			p := tc.setupPinger(t)
-			ctx := tc.ctx
-			if ctx == nil {
-				ctx = t.Context()
+			ctx := t.Context()
+			if tc.cancelCtx {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithCancel(ctx)
+				cancel()
 			}
 			if tc.wantErr {
 				assert.Error(t, p.Ping(ctx))

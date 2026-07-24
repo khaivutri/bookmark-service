@@ -7,7 +7,7 @@ import (
 )
 type Hasher interface {
 	Hash(password string) (string, error)
-	Compare(hash string, password string) bool
+	Compare(hash, password string) bool
 
 }
 
@@ -28,7 +28,7 @@ func (h *hasher) Hash(password string) (string, error) {
 	return string(hashBytes), nil
 }
 
-func (h *hasher) Compare(hash string, password string) bool {
+func (h *hasher) Compare(hash, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) 
 	return err == nil
 }
