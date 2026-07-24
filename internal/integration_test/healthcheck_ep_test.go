@@ -7,6 +7,7 @@ import (
 
 	"github.com/khaivutri/bookmark-service/internal/api"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
+	"github.com/khaivutri/bookmark-service/pkg/sqldb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,6 +21,7 @@ func TestHealthCheckEndpoint(t *testing.T) {
 		setupEnv func()
 
 		simulateRedisDown bool
+		simulateDBDown    bool
 
 		expectedConfigError  bool
 		expectedStatusCode   int
@@ -38,7 +40,7 @@ func TestHealthCheckEndpoint(t *testing.T) {
 			expectedResponseBody: `{"message":"OK",
 									"service_name":"my_service",
 									"instance_id":"cbe1a562-596b-45d0-bf8b-a999b23b184a",
-									"dependency":{"redis":"UP"}}`,
+									"dependency":{"redis":"UP","postgres":"UP"}}`,
 		},
 		{
 			name:      				"redis down - service unavailable",
@@ -54,7 +56,23 @@ func TestHealthCheckEndpoint(t *testing.T) {
 			expectedResponseBody: `{"message":"DEGRADED",
 									"service_name":"my_service",
 									"instance_id":"cbe1a562-596b-45d0-bf8b-a999b23b184a",
-									"dependency":{"redis":"DOWN"}}`,
+									"dependency":{"redis":"DOWN","postgres":"UP"}}`,
+		},
+		{
+			name:      				"postgres down - service unavailable",
+			reqMethod: 				http.MethodGet,
+			reqPath:   				"/health-check",
+			setupEnv: func() {
+				t.Setenv("INSTANCE_ID", "cbe1a562-596b-45d0-bf8b-a999b23b184a")
+				t.Setenv("SERVICE_NAME", "my_service")
+			},
+			simulateDBDown:      	true,
+			expectedConfigError: 	false,
+			expectedStatusCode:  	http.StatusServiceUnavailable,
+			expectedResponseBody: `{"message":"DEGRADED",
+									"service_name":"my_service",
+									"instance_id":"cbe1a562-596b-45d0-bf8b-a999b23b184a",
+									"dependency":{"redis":"UP","postgres":"DOWN"}}`,
 		},
 		{
 			name:      				"empty instance id should auto generate valid UUID",
@@ -122,7 +140,14 @@ func TestHealthCheckEndpoint(t *testing.T) {
 				assert.NoError(t, redisClient.Close())
 			}
 
-			testAPI := api.NewEngine(cfg, redisClient, nil)
+			dbClient := sqldb.InitMockDB(t)
+			if tc.simulateDBDown {
+				sqlDB, err := dbClient.DB()
+				assert.NoError(t, err)
+				assert.NoError(t, sqlDB.Close())
+			}
+
+			testAPI := api.NewEngine(cfg, redisClient, dbClient)
 
 			req, _ := http.NewRequest(tc.reqMethod, tc.reqPath, nil)
 			recorder := httptest.NewRecorder()
