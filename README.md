@@ -12,7 +12,7 @@ This project demonstrates a production-style REST API using:
 
 - Go as the server runtime
 - Gin as the HTTP framework
-- Redis as the URL storage and dependency checked by health checks
+- Redis as the URL storage, and both Redis and PostgreSQL as dependencies checked by health checks
 - Environment-based configuration via environment variables or a `.env` file
 - Layered architecture: Handler -> Service -> Repository -> Package
 - Structured error logging with zerolog
@@ -24,7 +24,7 @@ This project demonstrates a production-style REST API using:
 ## Features
 
 - Lightweight REST API server
-- Health check endpoint with Redis dependency status
+- Health check endpoint with Redis and PostgreSQL dependency status
 - User registration endpoint with request validation
 - URL shortening endpoint with TTL support
 - Redirect endpoint for generated short codes
@@ -249,7 +249,7 @@ If you changed `APP_PORT`, replace `8080` with your configured port.
 | ------ | --------------- | -------------------------------------------- | ---------------- |
 | GET    | `/health-check` | Returns service health and dependency status | `200 OK`         |
 
-When Redis is unavailable, the endpoint returns `503 Service Unavailable` with dependency status set to `DOWN`.
+When Redis or PostgreSQL is unavailable, the endpoint returns `503 Service Unavailable` with the corresponding dependency status set to `DOWN` and `message` set to `DEGRADED`.
 
 ### Example Request
 
@@ -266,12 +266,13 @@ Host: localhost:8080
   "service_name": "bookmark_service",
   "instance_id": "c45f7d4f-f0d0-42dc-90d8-d5eb0f6dbe5e",
   "dependency": {
-    "redis": "UP"
+    "redis": "UP",
+    "postgres": "UP"
   }
 }
 ```
 
-### Example Degraded Response
+### Example Degraded Response (e.g., PostgreSQL Down)
 
 ```json
 {
@@ -279,7 +280,8 @@ Host: localhost:8080
   "service_name": "bookmark_service",
   "instance_id": "c45f7d4f-f0d0-42dc-90d8-d5eb0f6dbe5e",
   "dependency": {
-    "redis": "DOWN"
+    "redis": "UP",
+    "postgres": "DOWN"
   }
 }
 ```
