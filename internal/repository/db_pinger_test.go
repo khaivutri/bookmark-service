@@ -12,57 +12,42 @@ func TestDBPinger_Ping(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupPinger func(t *testing.T) *DBPinger
-		setupCtx    func(t *testing.T) context.Context
+		ctx         context.Context
 		wantErr     bool
 	}{
 		{
 			name: "database is up -> Ping returns nil",
 			setupPinger: func(t *testing.T) *DBPinger {
-				db := sqldb.InitMockDB(t)
-				return NewDBPinger(db)
+				return NewDBPinger(sqldb.InitMockDB(t))
 			},
-			setupCtx: func(t *testing.T) context.Context {
-				return context.Background()
-			},
-			wantErr: false,
 		},
 		{
 			name: "database is closed -> Ping returns error",
 			setupPinger: func(t *testing.T) *DBPinger {
 				db := sqldb.InitMockDB(t)
-				sqlDB, err := db.DB()
-				if err != nil {
-					t.Fatalf("failed to get sqlDB: %v", err)
-				}
+				sqlDB, _ := db.DB()
 				_ = sqlDB.Close()
 				return NewDBPinger(db)
-			},
-			setupCtx: func(t *testing.T) context.Context {
-				return context.Background()
 			},
 			wantErr: true,
 		},
 		{
-			name: "nil database -> Ping returns ErrDependencyDown",
+			name: "nil database -> Ping returns error",
 			setupPinger: func(t *testing.T) *DBPinger {
 				return NewDBPinger(nil)
-			},
-			setupCtx: func(t *testing.T) context.Context {
-				return context.Background()
 			},
 			wantErr: true,
 		},
 		{
 			name: "context already expired -> Ping returns error",
 			setupPinger: func(t *testing.T) *DBPinger {
-				db := sqldb.InitMockDB(t)
-				return NewDBPinger(db)
+				return NewDBPinger(sqldb.InitMockDB(t))
 			},
-			setupCtx: func(t *testing.T) context.Context {
-				ctx, cancel := context.WithTimeout(context.Background(), 0) // expires immediately
-				t.Cleanup(cancel)
+			ctx: func() context.Context {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
 				return ctx
-			},
+			}(),
 			wantErr: true,
 		},
 	}
@@ -70,15 +55,17 @@ func TestDBPinger_Ping(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			pinger := tc.setupPinger(t)
-			ctx := tc.setupCtx(t)
-
+			ctx := tc.ctx
+			if ctx == nil {
+				ctx = t.Context()
+			}
 			err := pinger.Ping(ctx)
-
 			if tc.wantErr {
 				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+				return
 			}
+			assert.NoError(t, err)
 		})
 	}
 }
+

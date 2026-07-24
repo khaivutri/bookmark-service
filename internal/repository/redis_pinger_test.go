@@ -10,60 +10,51 @@ import (
 
 func TestRedisPinger_Ping(t *testing.T) {
 	tests := []struct {
-		name     		string
-		setupPinger 		func(t *testing.T) *RedisPinger
-		setupCtx 		func(t *testing.T) context.Context
-		wantErr  		bool
+		name        string
+		setupPinger func(t *testing.T) *RedisPinger
+		ctx         context.Context
+		wantErr     bool
 	}{
 		{
-			name: 		"redis is up -> Ping returns nil",
+			name: "redis is up -> Ping returns nil",
 			setupPinger: func(t *testing.T) *RedisPinger {
-				client := redisPkg.InitMockRedis(t)
-				return NewRedisPinger(client)
+				return NewRedisPinger(redisPkg.InitMockRedis(t))
 			},
-			setupCtx: func(t *testing.T) context.Context {
-				return context.Background()
-			},
-			wantErr: 	false,
 		},
 		{
-			name: 		"redis is down -> Ping returns error",
+			name: "redis is down -> Ping returns error",
 			setupPinger: func(t *testing.T) *RedisPinger {
 				client := redisPkg.InitMockRedis(t)
-				_ = client.Close() 
+				_ = client.Close()
 				return NewRedisPinger(client)
 			},
-			setupCtx: func(t *testing.T) context.Context {
-				return context.Background()
-			},
-			wantErr: 	true,
+			wantErr: true,
 		},
 		{
-			name: 		"context already expired -> Ping returns error",
+			name: "context already expired -> Ping returns error",
 			setupPinger: func(t *testing.T) *RedisPinger {
-				client := redisPkg.InitMockRedis(t)
-				return NewRedisPinger(client)
+				return NewRedisPinger(redisPkg.InitMockRedis(t))
 			},
-			setupCtx: func(t *testing.T) context.Context {
-				ctx, cancel := context.WithTimeout(context.Background(), 0) // expires immediately
-				t.Cleanup(cancel)
+			ctx: func() context.Context {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
 				return ctx
-			},
-			wantErr: 	true,
+			}(),
+			wantErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			pinger := tc.setupPinger(t)
-			ctx := tc.setupCtx(t)
-
-			err := pinger.Ping(ctx)
-
+			p := tc.setupPinger(t)
+			ctx := tc.ctx
+			if ctx == nil {
+				ctx = t.Context()
+			}
 			if tc.wantErr {
-				assert.Error(t, err)
+				assert.Error(t, p.Ping(ctx))
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, p.Ping(ctx))
 			}
 		})
 	}
