@@ -66,7 +66,8 @@ type handlers struct {
 
 func (e *engine) initHandlers() *handlers {
 	redisPinger := repository.NewRedisPinger(e.redis)
-	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId, redisPinger )
+	dbPinger := repository.NewDBPinger(e.db)
+	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId, redisPinger, dbPinger)
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
 
 	urlStorage := repository.NewURLStorage(e.redis)
@@ -79,6 +80,7 @@ func (e *engine) initHandlers() *handlers {
 	registerHandler := userHandler.NewHandler(userSvc)
 	return &handlers{healthCheck, shortenURL, registerHandler}
 }
+
 func (e *engine) initRoutes(){
 	allHandlers := e.initHandlers()
 	e.app.HandleMethodNotAllowed = true	

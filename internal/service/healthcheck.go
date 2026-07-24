@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -17,19 +18,25 @@ type redisPinger interface {
 	Ping(ctx context.Context) error
 }
 
+type dbPinger interface {
+	Ping(ctx context.Context) error
+}
+
 type healthCheck struct {
 	serviceName 	string
 	instanceID  	string
 	
 	redisAdapter 	redisPinger
+	dbAdapter    	dbPinger
 }
 
 // NewHealthCheck creates and returns a new HealthCheck service instance.
-func NewHealthCheck(serviceName, instanceID string, redisAdapter redisPinger) HealthCheck {
+func NewHealthCheck(serviceName, instanceID string, redisAdapter redisPinger, dbAdapter dbPinger) HealthCheck {
 	return &healthCheck{	
 							serviceName: 	serviceName,
 							instanceID:		instanceID,
 							redisAdapter: 	redisAdapter,
+							dbAdapter:    	dbAdapter,
 						}
 }
 
@@ -37,7 +44,7 @@ func NewHealthCheck(serviceName, instanceID string, redisAdapter redisPinger) He
 func (hc *healthCheck) Check(ctx context.Context) (*model.HealthReport, error) {
 	dpc := make(map[string]string)
 
-	var msg string 
+	var msg string = "OK"
 	var firstErr error
 
 	pingCtx, cancel := context.WithTimeout(ctx, 5 * time.Second)
@@ -49,7 +56,20 @@ func (hc *healthCheck) Check(ctx context.Context) (*model.HealthReport, error) {
 		firstErr = fmt.Errorf("%w: redis: %v", repository.ErrDependencyDown, pingErr)
 	} else {
 		dpc["redis"] = "UP"
-		msg = "OK"
+	}
+
+	if pingErr := hc.dbAdapter.Ping(pingCtx); pingErr != nil {
+		dpc["postgres"] = "DOWN"
+		msg = "DEGRADED"
+		pgErr := fmt.Errorf("%w: postgres: %w", repository.ErrDependencyDown, pingErr)
+
+		if firstErr == nil {
+			firstErr = pgErr
+		} else {
+			firstErr = errors.Join(firstErr, pgErr)
+		}
+	} else {
+		dpc["postgres"] = "UP"
 	}
 
 	return &model.HealthReport{	Message: msg, 
