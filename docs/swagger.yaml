@@ -98,9 +98,9 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is a simple REST API for a bookmark service.
+  description: This is a simple REST API for a bookmark service - Demo MLIoT Lab.
   title: Bookmark Service API
-  version: "1.5"
+  version: "2.0"
 paths:
   /health-check:
     get:
