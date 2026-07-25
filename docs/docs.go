@@ -342,12 +342,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.5",
+	Version:          "2.0",
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Bookmark Service API",
-	Description:      "This is a simple REST API for a bookmark service.",
+	Description:      "This is a simple REST API for a bookmark service - Demo MLIoT Lab.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
