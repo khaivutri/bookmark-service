@@ -10,8 +10,8 @@ import (
 )
 
 //@title Bookmark Service API
-//@version 1.5
-//@description This is a simple REST API for a bookmark service.
+//@version 2.0
+//@description This is a simple REST API for a bookmark service - Demo MLIoT Lab. 
 //@BasePath /
 func main() {
 	cfg, err := api.NewConfig()
