@@ -44,6 +44,36 @@ func (_m *Service) CreateUser(ctx context.Context, userName string, displayName 
 	return r0, r1
 }
 
+// GetSelfInfo provides a mock function with given fields: ctx, userID
+func (_m *Service) GetSelfInfo(ctx context.Context, userID string) (*model.User, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSelfInfo")
+	}
+
+	var r0 *model.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Login provides a mock function with given fields: ctx, userName, password
 func (_m *Service) Login(ctx context.Context, userName string, password string) (string, error) {
 	ret := _m.Called(ctx, userName, password)
