@@ -7,11 +7,12 @@ import (
 
 	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
-	
+
 	"github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 
 	"gorm.io/gorm"
 )
+
 var (
 	existingUser1 = &model.User{
 		ID:          "b649b57b-b7b6-44e4-a233-74147ecf56ee",
@@ -28,7 +29,6 @@ var (
 		Email:       "test2@example.com",
 	}
 )
-
 
 func newTestRepository(t *testing.T) (*sqlRepository, *gorm.DB) {
 	t.Helper()
@@ -184,60 +184,84 @@ func TestSqlRepository_GetUserByID(t *testing.T) {
 func TestSqlRepository_UpdateUser(t *testing.T) {
 	t.Parallel()
 
-	t.Run("update existing user - persists changes", func(t *testing.T) {
-		t.Parallel()
+	testCases := []struct {
+		name         string
+		inputUser    *model.User
+		expectedErr  error
+		verifyStored bool
+	}{
+		{
+			name: "update existing user successfully",
+			inputUser: &model.User{
+				ID:          existingUser1.ID,
+				DisplayName: "Test1 Updated",
+				UserName:    existingUser1.UserName,
+				Password:    existingUser1.Password,
+				Email:       "test1_updated@example.com",
+			},
+			verifyStored: true,
+		},
+		{
+			name: "new id creates a user",
+			inputUser: &model.User{
+				ID:          "c1111111-1111-1111-1111-111111111111",
+				DisplayName: "New User",
+				UserName:    "newuser",
+				Password:    "pwd123",
+				Email:       "newuser@example.com",
+			},
+			verifyStored: true,
+		},
+		{
+			name: "duplicate username returns parsed database error",
+			inputUser: &model.User{
+				ID:          existingUser1.ID,
+				DisplayName: existingUser1.DisplayName,
+				UserName:    existingUser2.UserName,
+				Password:    existingUser1.Password,
+				Email:       "unique@example.com",
+			},
+			expectedErr: dbutils.ErrDuplicateUserName,
+		},
+		{
+			name: "duplicate email returns parsed database error",
+			inputUser: &model.User{
+				ID:          existingUser1.ID,
+				DisplayName: existingUser1.DisplayName,
+				UserName:    "unique_user",
+				Password:    existingUser1.Password,
+				Email:       existingUser2.Email,
+			},
+			expectedErr: dbutils.ErrDuplicateEmail,
+		},
+	}
 
-		repo, db := newTestRepository(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
+			repo, db := newTestRepository(t)
+			err := repo.UpdateUser(t.Context(), tc.inputUser)
 
-		updated := *existingUser1
-		updated.DisplayName = "Test1 Updated"
-		updated.Email = "test1_updated@example.com"
+			if tc.expectedErr != nil {
+				if !errors.Is(err, tc.expectedErr) {
+					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
+				}
+				return
+			}
 
-		err := repo.UpdateUser(context.Background(), &updated)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !tc.verifyStored {
+				return
+			}
 
-		
-		var got model.User
-		if err := db.Where("id = ?", existingUser1.ID).First(&got).Error; err != nil {
-			t.Fatalf("failed to fetch updated user: %v", err)
-		}
-
-		if got.DisplayName != "Test1 Updated" {
-			t.Errorf("DisplayName not updated: want %q, got %q", "Test1 Updated", got.DisplayName)
-		}
-		if got.Email != "test1_updated@example.com" {
-			t.Errorf("Email not updated: want %q, got %q", "test1_updated@example.com", got.Email)
-		}
-		if got.UserName != existingUser1.UserName {
-			t.Errorf("UserName should remain unchanged: want %q, got %q", existingUser1.UserName, got.UserName)
-		}
-	})
-
-	t.Run("update user with new id - creates new record (gorm Save upsert behavior)", func(t *testing.T) {
-		t.Parallel()
-
-		repo, db := newTestRepository(t)
-
-		newUser := &model.User{
-			ID:          "c1111111-1111-1111-1111-111111111111",
-			DisplayName: "New User",
-			UserName:    "newuser",
-			Password:    "pwd123",
-			Email:       "newuser@example.com",
-		}
-
-		err := repo.UpdateUser(t.Context(), newUser)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		var got model.User
-		if err := db.Where("id = ?", newUser.ID).First(&got).Error; err != nil {
-			t.Fatalf("expected new record to be created by Save(), got error: %v", err)
-		}
-		assertUserEqual(t, newUser, &got)
-	})
+			var got model.User
+			if err := db.First(&got, "id = ?", tc.inputUser.ID).Error; err != nil {
+				t.Fatalf("failed to fetch stored user: %v", err)
+			}
+			assertUserEqual(t, tc.inputUser, &got)
+		})
+	}
 }
