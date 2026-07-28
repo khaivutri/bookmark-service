@@ -26,6 +26,9 @@ This project demonstrates a production-style REST API using:
 - Lightweight REST API server
 - Health check endpoint with Redis and PostgreSQL dependency status
 - User registration endpoint with request validation
+- User login endpoint with request validation and JWT issuance
+- Self profile retrieval (`GET /v1/self/info`) and update (`PUT /v1/self/info`) endpoints
+- Request validation utility powered by Go Generics and `go-playground/validator`
 - URL shortening endpoint with TTL support
 - Redirect endpoint for generated short codes
 - Random alphanumeric short-code generation
@@ -360,6 +363,120 @@ Content-Type: application/json
 
 ---
 
+## User Login
+
+| Method | Endpoint          | Description                                                    | Success Response |
+| ------ | ----------------- | -------------------------------------------------------------- | ---------------- |
+| POST   | `/v1/users/login` | Authenticates user with username & password, returns JWT token | `200 OK`         |
+
+### Example Request
+
+```http
+POST /v1/users/login HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "password": "Password123@"
+}
+```
+
+### Example Success Response
+
+```json
+{
+  "message": "Logged in successfully!",
+  "data": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDgwZjc1NS03ZGNlLTRjOTUtYjhiZi03NWJiOGUyNDBlZjIiLCJleHAiOjE2OTE4MTIwMDB9.some-signature"
+}
+```
+
+### Example Failure Response (Invalid Credentials)
+
+```json
+{
+  "message": "invalid credential"
+}
+```
+
+---
+
+## Get Current User Info
+
+| Method | Endpoint        | Description                                               | Security   | Success Response |
+| ------ | --------------- | --------------------------------------------------------- | ---------- | ---------------- |
+| GET    | `/v1/self/info` | Retrieves profile details of the authenticated requestor  | Bearer JWT | `200 OK`         |
+
+### Example Request
+
+```http
+GET /v1/self/info HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer <your-jwt-token>
+```
+
+### Example Success Response
+
+```json
+{
+  "id": "7d80f755-7dce-4c95-b8bf-75bb8e240ef2",
+  "display_name": "John Doe",
+  "username": "johndoe",
+  "email": "john.doe@example.com",
+  "created_at": "2026-07-22T11:00:00Z",
+  "updated_at": "2026-07-22T11:00:00Z"
+}
+```
+
+### Example Failure Response (Unauthorized)
+
+```json
+{
+  "error": "Invalid token"
+}
+```
+
+---
+
+## Update Current User Info
+
+| Method | Endpoint        | Description                                                    | Security   | Success Response |
+| ------ | --------------- | -------------------------------------------------------------- | ---------- | ---------------- |
+| PUT    | `/v1/self/info` | Updates Display Name and Email of the authenticated requestor | Bearer JWT | `200 OK`         |
+
+### Example Request
+
+```http
+PUT /v1/self/info HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "display_name": "Jane Doe",
+  "email": "jane.doe@example.com"
+}
+```
+
+### Example Success Response
+
+```json
+{
+  "message": "Edit current user successfully!"
+}
+```
+
+### Example Failure Response (Bad Request / Validation Error)
+
+```json
+{
+  "message": "Invalid input",
+  "details": ["email is invalid (email)"]
+}
+```
+
+---
+
 ## Create Short Link
 
 | Method | Endpoint            | Description                          | Success Response |
@@ -494,13 +611,14 @@ make test
 
 The test suite includes:
 
-- Handler tests
+- Handler tests (with mock-based validations for registration, login, and user profile)
 - Service tests
-- Repository tests
+- Repository tests (mock-based database and Redis transactions)
 - Redis client/config/mock tests
 - Logger level tests
 - Code generator tests
-- Integration tests for health-check and short-link endpoints
+- Request binder unit tests
+- Integration tests for health-check, short-link, registration, login, and self user profile endpoints
 
 ---
 
