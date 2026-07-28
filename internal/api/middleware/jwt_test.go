@@ -18,9 +18,10 @@ func TestJWTAuth(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		inputAuthHeader    string
-		claims             jwt.MapClaims
-		setupMockValidator func(t *testing.T, claims jwt.MapClaims) *mocks.JWTValidator
+		inputAuthHeader string
+		claims          jwt.MapClaims
+		validationToken string
+		validationError error
 
 		expectedCode         int
 		expectedResponseBody string
@@ -30,24 +31,15 @@ func TestJWTAuth(t *testing.T) {
 			name: "success",
 
 			inputAuthHeader: "Bearer test-token-string",
+			validationToken: "test-token-string",
 			claims: jwt.MapClaims{
 				"sub": "69c11072-9af6-4a5f-81d5-239d96154d5e",
 			},
-			setupMockValidator: func(t *testing.T, claims jwt.MapClaims) *mocks.JWTValidator {
-				mockValidator := mocks.NewJWTValidator(t)
-				mockValidator.On("ValidateJWT", "test-token-string").Return(claims, nil).Once()
-				return mockValidator
-			},
-
 			expectedCode:       http.StatusOK,
 			expectedNextCalled: true,
 		},
 		{
 			name: "returns unauthorized when authorization header is missing",
-
-			setupMockValidator: func(t *testing.T, claims jwt.MapClaims) *mocks.JWTValidator {
-				return mocks.NewJWTValidator(t)
-			},
 
 			expectedCode:         http.StatusUnauthorized,
 			expectedResponseBody: `{"error":"Unauthorized"}`,
@@ -55,22 +47,14 @@ func TestJWTAuth(t *testing.T) {
 		{
 			name: "returns unauthorized when authorization scheme is not bearer",
 
-			inputAuthHeader: "Basic test-token-string",
-			setupMockValidator: func(t *testing.T, claims jwt.MapClaims) *mocks.JWTValidator {
-				return mocks.NewJWTValidator(t)
-			},
-
+			inputAuthHeader:      "Basic test-token-string",
 			expectedCode:         http.StatusUnauthorized,
 			expectedResponseBody: `{"error":"Unauthorized"}`,
 		},
 		{
 			name: "returns unauthorized when authorization header is malformed",
 
-			inputAuthHeader: "Bearer",
-			setupMockValidator: func(t *testing.T, claims jwt.MapClaims) *mocks.JWTValidator {
-				return mocks.NewJWTValidator(t)
-			},
-
+			inputAuthHeader:      "Bearer",
 			expectedCode:         http.StatusUnauthorized,
 			expectedResponseBody: `{"error":"Unauthorized"}`,
 		},
@@ -78,11 +62,8 @@ func TestJWTAuth(t *testing.T) {
 			name: "returns unauthorized when jwt validation fails",
 
 			inputAuthHeader: "Bearer invalid-token-string",
-			setupMockValidator: func(t *testing.T, claims jwt.MapClaims) *mocks.JWTValidator {
-				mockValidator := mocks.NewJWTValidator(t)
-				mockValidator.On("ValidateJWT", "invalid-token-string").Return(nil, errors.New("invalid token")).Once()
-				return mockValidator
-			},
+			validationToken: "invalid-token-string",
+			validationError: errors.New("invalid token"),
 
 			expectedCode:         http.StatusUnauthorized,
 			expectedResponseBody: `{"error":"Unauthorized"}`,
@@ -99,7 +80,10 @@ func TestJWTAuth(t *testing.T) {
 				req.Header.Set("Authorization", tc.inputAuthHeader)
 			}
 
-			mockValidator := tc.setupMockValidator(t, tc.claims)
+			mockValidator := mocks.NewJWTValidator(t)
+			if tc.validationToken != "" {
+				mockValidator.On("ValidateJWT", tc.validationToken).Return(tc.claims, tc.validationError).Once()
+			}
 			testMiddleware := NewJWTAuth(mockValidator)
 
 			nextCalled := false

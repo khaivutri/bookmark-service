@@ -31,9 +31,7 @@ func TestLogin(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		setupMockRepo         func(ctx context.Context, t *testing.T) *mockRepo.Repository
-		setupMockHasher       func(t *testing.T) *mockHasher.Hasher
-		setupMockJWTGenerator func(t *testing.T) *mockJWT.JWTGenerator
+		setupMocks func(ctx context.Context, repo *mockRepo.Repository, hasher *mockHasher.Hasher, generator *mockJWT.JWTGenerator)
 
 		expectedToken string
 		expectedError error
@@ -41,19 +39,10 @@ func TestLogin(t *testing.T) {
 		{
 			name: "success - login returns generated jwt token",
 
-			setupMockRepo: func(ctx context.Context, t *testing.T) *mockRepo.Repository {
-				repo := mockRepo.NewRepository(t)
+			setupMocks: func(ctx context.Context, repo *mockRepo.Repository, hasher *mockHasher.Hasher, generator *mockJWT.JWTGenerator) {
 				repo.On("GetUserByUserName", ctx, "johndoe").Return(stubUser, nil).Once()
-				return repo
-			},
-			setupMockHasher: func(t *testing.T) *mockHasher.Hasher {
-				hasher := mockHasher.NewHasher(t)
 				hasher.On("Compare", "hashed-password", "Password123@").Return(true).Once()
-				return hasher
-			},
-			setupMockJWTGenerator: func(t *testing.T) *mockJWT.JWTGenerator {
-				jwtGenerator := mockJWT.NewJWTGenerator(t)
-				jwtGenerator.On("GenerateJWT", mock.MatchedBy(func(claims jwt.MapClaims) bool {
+				generator.On("GenerateJWT", mock.MatchedBy(func(claims jwt.MapClaims) bool {
 					issuedAt, ok := claims["iat"].(int64)
 					if !ok {
 						return false
@@ -71,7 +60,6 @@ func TestLogin(t *testing.T) {
 						issuedAt <= now+5 &&
 						expiresAt-issuedAt == int64(tokenDuration.Seconds())
 				})).Return("jwt-token-string", nil).Once()
-				return jwtGenerator
 			},
 
 			expectedToken: "jwt-token-string",
@@ -79,16 +67,8 @@ func TestLogin(t *testing.T) {
 		{
 			name: "error - username does not exist",
 
-			setupMockRepo: func(ctx context.Context, t *testing.T) *mockRepo.Repository {
-				repo := mockRepo.NewRepository(t)
+			setupMocks: func(ctx context.Context, repo *mockRepo.Repository, _ *mockHasher.Hasher, _ *mockJWT.JWTGenerator) {
 				repo.On("GetUserByUserName", ctx, "johndoe").Return(nil, dbutils.ErrRecordNotFound).Once()
-				return repo
-			},
-			setupMockHasher: func(t *testing.T) *mockHasher.Hasher {
-				return mockHasher.NewHasher(t)
-			},
-			setupMockJWTGenerator: func(t *testing.T) *mockJWT.JWTGenerator {
-				return mockJWT.NewJWTGenerator(t)
 			},
 
 			expectedError: ErrInvalidCredential,
@@ -96,16 +76,8 @@ func TestLogin(t *testing.T) {
 		{
 			name: "error - repository returns unexpected error",
 
-			setupMockRepo: func(ctx context.Context, t *testing.T) *mockRepo.Repository {
-				repo := mockRepo.NewRepository(t)
+			setupMocks: func(ctx context.Context, repo *mockRepo.Repository, _ *mockHasher.Hasher, _ *mockJWT.JWTGenerator) {
 				repo.On("GetUserByUserName", ctx, "johndoe").Return(nil, repoErr).Once()
-				return repo
-			},
-			setupMockHasher: func(t *testing.T) *mockHasher.Hasher {
-				return mockHasher.NewHasher(t)
-			},
-			setupMockJWTGenerator: func(t *testing.T) *mockJWT.JWTGenerator {
-				return mockJWT.NewJWTGenerator(t)
 			},
 
 			expectedError: repoErr,
@@ -113,18 +85,9 @@ func TestLogin(t *testing.T) {
 		{
 			name: "error - password does not match",
 
-			setupMockRepo: func(ctx context.Context, t *testing.T) *mockRepo.Repository {
-				repo := mockRepo.NewRepository(t)
+			setupMocks: func(ctx context.Context, repo *mockRepo.Repository, hasher *mockHasher.Hasher, _ *mockJWT.JWTGenerator) {
 				repo.On("GetUserByUserName", ctx, "johndoe").Return(stubUser, nil).Once()
-				return repo
-			},
-			setupMockHasher: func(t *testing.T) *mockHasher.Hasher {
-				hasher := mockHasher.NewHasher(t)
 				hasher.On("Compare", "hashed-password", "Password123@").Return(false).Once()
-				return hasher
-			},
-			setupMockJWTGenerator: func(t *testing.T) *mockJWT.JWTGenerator {
-				return mockJWT.NewJWTGenerator(t)
 			},
 
 			expectedError: ErrInvalidCredential,
@@ -132,22 +95,12 @@ func TestLogin(t *testing.T) {
 		{
 			name: "error - jwt generator fails",
 
-			setupMockRepo: func(ctx context.Context, t *testing.T) *mockRepo.Repository {
-				repo := mockRepo.NewRepository(t)
+			setupMocks: func(ctx context.Context, repo *mockRepo.Repository, hasher *mockHasher.Hasher, generator *mockJWT.JWTGenerator) {
 				repo.On("GetUserByUserName", ctx, "johndoe").Return(stubUser, nil).Once()
-				return repo
-			},
-			setupMockHasher: func(t *testing.T) *mockHasher.Hasher {
-				hasher := mockHasher.NewHasher(t)
 				hasher.On("Compare", "hashed-password", "Password123@").Return(true).Once()
-				return hasher
-			},
-			setupMockJWTGenerator: func(t *testing.T) *mockJWT.JWTGenerator {
-				jwtGenerator := mockJWT.NewJWTGenerator(t)
-				jwtGenerator.On("GenerateJWT", mock.MatchedBy(func(claims jwt.MapClaims) bool {
+				generator.On("GenerateJWT", mock.MatchedBy(func(claims jwt.MapClaims) bool {
 					return claims["sub"] == stubUser.ID && claims["email"] == stubUser.Email
 				})).Return("", jwtErr).Once()
-				return jwtGenerator
 			},
 
 			expectedError: jwtErr,
@@ -159,9 +112,10 @@ func TestLogin(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-			repo := tc.setupMockRepo(ctx, t)
-			hasher := tc.setupMockHasher(t)
-			jwtGenerator := tc.setupMockJWTGenerator(t)
+			repo := mockRepo.NewRepository(t)
+			hasher := mockHasher.NewHasher(t)
+			jwtGenerator := mockJWT.NewJWTGenerator(t)
+			tc.setupMocks(ctx, repo, hasher, jwtGenerator)
 
 			svc := NewService(repo, hasher, jwtGenerator)
 
