@@ -1,7 +1,6 @@
 package user_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -17,7 +16,6 @@ import (
 )
 
 func TestService_CreateUser_IntegrationWithFixture(t *testing.T) {
-	ctx := context.Background()
 
 	db := fixture.NewFixture(t, &fixture.UserCommonTest{})
 	realRepo := repoUser.NewSqlRepository(db)
@@ -129,6 +127,7 @@ func TestService_CreateUser_IntegrationWithFixture(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockHasher := utilMocks.NewHasher(t)
 			tc.setupMock(mockHasher)
+			ctx := t.Context()
 
 			jwtGen := jwtMocks.NewJWTGenerator(t)
 			svc := serviceUser.NewService(realRepo, mockHasher, jwtGen)
