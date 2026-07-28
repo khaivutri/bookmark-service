@@ -38,6 +38,9 @@ var (
 )
 func (j *jwtValidator) ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, ErrInvalidToken
+		}
 		return j.publicKey, nil
 	})
 
