@@ -37,15 +37,18 @@ func (u *userHandler) GetSelfInfo(ctx *gin.Context) {
 }
 
 
-// UpdateSelfInfo update your current information
-// @Summary      update your current information
-// @Description  update your current information
+// UpdateSelfInfo updates the current user's profile information
+// @Summary      Update user profile
+// @Description  Updates the authenticated user's display name and email address.
 // @Tags         User
 // @Security     BearerAuth
 // @Accept       application/json
 // @Produce      application/json
-// @Param        request  body      user.UpdateUserInfoReq  true  "Update user info request"
-// @Success      200 {object} object{user.UpdateUserInfoRes} "Success"
+// @Param        request  body      user.UpdateUserInfoReq  true  "Update user info request payload"
+// @Success      200      {object}  user.UpdateInfoRes      "Profile updated successfully"
+// @Failure      400      {object}  response.ErrMessage     "Invalid request input or validation details"
+// @Failure      401      {object}  response.ErrMessage     "Unauthorized access token"
+// @Failure      500      {object}  response.ErrMessage     "Internal Server Error"
 // @Router       /v1/self/info [put]
 func (u *userHandler) UpdateSelfInfo(ctx *gin.Context) {
 	requestBody, err := requestutils.BindInputFromResquest[userDTO.UpdateUserInfoReq](ctx)
