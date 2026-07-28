@@ -8,6 +8,8 @@ import (
 type Handler interface {
 	Register(ctx *gin.Context)
 	Login(ctx *gin.Context)
+
+	GetSelfInfo(ctx *gin.Context)
 }
 
 type userHandler struct {

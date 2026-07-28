@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/docs"
+	"github.com/khaivutri/bookmark-service/internal/api/middleware"
 	"github.com/khaivutri/bookmark-service/internal/handler"
 	v1 "github.com/khaivutri/bookmark-service/internal/handler/v1"
 	userHandler "github.com/khaivutri/bookmark-service/internal/handler/v1/user"
@@ -46,6 +47,7 @@ type EngineOpts struct {
 
 	Redis 		*redis.Client
 	DB 			*gorm.DB
+
 	JWTGen    	jwtutils.JWTGenerator
 	JWTVal   	jwtutils.JWTValidator
 }
@@ -101,6 +103,9 @@ func (e *engine) initRoutes(){
 	allHandlers := e.initHandlers()
 	e.app.HandleMethodNotAllowed = true	
 	
+	// init middlewares
+	jwtAuth := middleware.NewJWTAuth(e.jwtVal)
+	
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", allHandlers.healthCheckHandlers.HealthCheck)
@@ -117,6 +122,12 @@ func (e *engine) initRoutes(){
 		{
 			users.POST("/register", allHandlers.registerHandler.Register)
 			users.POST("/login", allHandlers.registerHandler.Login)
+		}
+
+		self := v1.Group("/self")
+		{	
+			self.Use(jwtAuth.JWTAuth())
+			self.GET("/info", allHandlers.registerHandler.GetSelfInfo)
 		}
 	}
 }
