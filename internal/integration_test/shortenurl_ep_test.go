@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/api"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
 	"github.com/stretchr/testify/assert"
@@ -88,7 +89,12 @@ func TestShortenURLEndpoint_CreateShortenLink(t *testing.T) {
 				require.NoError(t, redisClient.Close())
 			}
 
-			testAPI := api.NewEngine(cfg, redisClient, nil)
+			testAPI := api.NewEngine(api.EngineOpts{
+				App: 		gin.New(),
+				Cfg: 		cfg,
+				Redis: 		redisClient,
+				DB: 		nil,
+			})
 
 			req := httptest.NewRequest(tc.reqMethod, tc.reqPath, bytes.NewBufferString(tc.reqBody))
 			req.Header.Set("Content-Type", "application/json")
@@ -172,7 +178,12 @@ func TestShortenURLEndpoint_CreateThenRedirect(t *testing.T) {
 			require.NoError(t, err)
 
 			redisClient := redisPkg.InitMockRedis(t)
-			testAPI := api.NewEngine(cfg, redisClient, nil)
+			testAPI := api.NewEngine(api.EngineOpts{
+				App: 		gin.New(),
+				Cfg: 		cfg,
+				Redis: 		redisClient,
+				DB: 		nil,
+			})
 
 			redirectPath := tc.redirectPath
 			if tc.createBody != "" {

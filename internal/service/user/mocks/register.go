@@ -44,6 +44,34 @@ func (_m *Service) CreateUser(ctx context.Context, userName string, displayName 
 	return r0, r1
 }
 
+// Login provides a mock function with given fields: ctx, userName, password
+func (_m *Service) Login(ctx context.Context, userName string, password string) (string, error) {
+	ret := _m.Called(ctx, userName, password)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Login")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return rf(ctx, userName, password)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = rf(ctx, userName, password)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, userName, password)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewService creates a new instance of Service. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewService(t interface {
