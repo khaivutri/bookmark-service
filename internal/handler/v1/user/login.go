@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	userDTO "github.com/khaivutri/bookmark-service/internal/handler/v1/dto/user"
 	"github.com/khaivutri/bookmark-service/internal/service/user"
+	"github.com/khaivutri/bookmark-service/pkg/requestutils"
 	"github.com/khaivutri/bookmark-service/pkg/response"
 	"github.com/rs/zerolog/log"
 )
-
 
 // @Summary      User Login
 // @Description  Logs in a user with the provided username and password, returning a JWT token.
@@ -23,9 +23,8 @@ import (
 // @Failure      500  {object}  response.ErrMessage  "Internal Server Error"
 // @Router       /v1/users/login [post]
 func (u *userHandler) Login(ctx *gin.Context) {
-	body := &userDTO.LoginRequest{}
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, response.InputFieldErrorResponse(err))
+	body, err := requestutils.BindInputFromResquest[userDTO.LoginRequest](ctx)
+	if err != nil {
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 
 	userDTO "github.com/khaivutri/bookmark-service/internal/handler/v1/dto/user"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
+	"github.com/khaivutri/bookmark-service/pkg/requestutils"
 	"github.com/khaivutri/bookmark-service/pkg/response"
 	"github.com/rs/zerolog/log"
 )
@@ -23,10 +24,8 @@ import (
 // @Failure      500  {object}  map[string]string  "Internal Server Error"
 // @Router       /v1/users/register [post]
 func (u *userHandler) Register(ctx *gin.Context) {
-	body := &userDTO.RegisterRequest{}
-
-	if err := ctx.ShouldBind(&body); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, response.InputFieldErrorResponse(err))
+	body, err := requestutils.BindInputFromResquest[userDTO.RegisterRequest](ctx)
+	if err != nil {
 		return
 	}
 

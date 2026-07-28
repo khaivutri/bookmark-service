@@ -8,6 +8,7 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/handler/v1/dto"
 	"github.com/khaivutri/bookmark-service/internal/repository"
 	"github.com/khaivutri/bookmark-service/internal/service"
+	"github.com/khaivutri/bookmark-service/pkg/requestutils"
 	"github.com/khaivutri/bookmark-service/pkg/response"
 	"github.com/rs/zerolog/log"
 )
@@ -42,10 +43,8 @@ func NewShortenURL(service service.ShortenURL) ShortenURL {
 // @Failure      500  {object}  map[string]string  "Internal Server Error"
 // @Router       /v1/links/shorten [post]
 func (s *shortenURL) CreateShortenLink(ctx *gin.Context) {
-	var req dto.ShortenURLReq
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, response.InputFieldErrorResponse(err))
+	req, err := requestutils.BindInputFromResquest[dto.ShortenURLReq](ctx)
+	if err != nil {
 		return
 	}
 
