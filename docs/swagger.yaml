@@ -44,6 +44,50 @@ definitions:
         example: bookmark_service
         type: string
     type: object
+  model.User:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  response.ErrMessage:
+    properties:
+      details: {}
+      message:
+        type: string
+    type: object
+  user.LoginRequest:
+    properties:
+      password:
+        example: Password123@
+        type: string
+      username:
+        example: johndoe
+        maxLength: 20
+        minLength: 3
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  user.LoginResponse:
+    properties:
+      data:
+        example: jwt_token
+        type: string
+      message:
+        example: Logged in successfully!
+        type: string
+    type: object
   user.RegisterData:
     properties:
       created_at:
@@ -95,6 +139,22 @@ definitions:
         $ref: '#/definitions/user.RegisterData'
       message:
         type: string
+    type: object
+  user.UpdateInfoRes:
+    properties:
+      message:
+        example: Edit current user successfully!
+        type: string
+    type: object
+  user.UpdateUserInfoReq:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+    required:
+    - display_name
+    - email
     type: object
 info:
   contact: {}
@@ -192,6 +252,92 @@ paths:
       summary: Create Shorten Link
       tags:
       - ShortenURL
+  /v1/self/info:
+    get:
+      consumes:
+      - application/json
+      description: get your current information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/model.User'
+            type: object
+      security:
+      - BearerAuth: []
+      summary: get your current information
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's display name and email address.
+      parameters:
+      - description: Update user info request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdateUserInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile updated successfully
+          schema:
+            $ref: '#/definitions/user.UpdateInfoRes'
+        "400":
+          description: Invalid request input or validation details
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "401":
+          description: Unauthorized access token
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - User
+  /v1/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user with the provided username and password, returning
+        a JWT token.
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login response
+          schema:
+            $ref: '#/definitions/user.LoginResponse'
+        "400":
+          description: Bad Request / Invalid credentials
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      summary: User Login
+      tags:
+      - User
   /v1/users/register:
     post:
       consumes:
@@ -227,4 +373,9 @@ paths:
       summary: Register a new user
       tags:
       - User
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
