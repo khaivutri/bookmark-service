@@ -13,10 +13,14 @@ import (
 	"gorm.io/gorm"
 )
 
-//@title Bookmark Service API
-//@version 2.0
-//@description This is a simple REST API for a bookmark service - Demo MLIoT Lab.
-//@BasePath /
+//	@title Bookmark Service API
+//	@version 2.0
+//	@description This is a simple REST API for a bookmark service - Demo MLIoT Lab.
+//	@BasePath /
+//	@securityDefinitions.apikey BearerAuth
+//	@in header
+//	@name Authorization
+
 func main() {
 	cfg, err := api.NewConfig()
 	if err != nil {

@@ -128,6 +128,7 @@ func (e *engine) initRoutes(){
 		{	
 			self.Use(jwtAuth.JWTAuth())
 			self.GET("/info", allHandlers.registerHandler.GetSelfInfo)
+			self.PUT("/info", allHandlers.registerHandler.UpdateSelfInfo)
 		}
 	}
 }

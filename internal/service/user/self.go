@@ -8,11 +8,29 @@ import (
 )
 var (
 	ErrUserNotFound = errors.New("user not found")
+	ErrFailUpdateUser = errors.New("failed to update user")
 )
+
 func (s *service) GetSelfInfo(ctx context.Context, userID string) (*model.User, error) {
 	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}
 	return user, nil
+}
+
+func (s *service) UpdateSelfInfo(ctx context.Context, userID, displayName, email string) error {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return ErrUserNotFound
+	}
+	
+	user.DisplayName = displayName
+	user.Email = email
+	
+	err = s.repo.UpdateUser(ctx, user)
+	if err != nil {
+		return ErrFailUpdateUser
+	}
+	return nil
 }

@@ -10,6 +10,7 @@ type Handler interface {
 	Login(ctx *gin.Context)
 
 	GetSelfInfo(ctx *gin.Context)
+	UpdateSelfInfo(ctx *gin.Context)
 }
 
 type userHandler struct {

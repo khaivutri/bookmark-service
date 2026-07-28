@@ -11,6 +11,8 @@ import (
 
 type Service interface {
 	CreateUser(ctx context.Context, userName, displayName, password, email string) (*model.User, error)
+	UpdateSelfInfo(ctx context.Context, userID, displayName, email string) (error)
+	
 	Login(ctx context.Context, userName, password string) (string, error)
 
 	GetSelfInfo(ctx context.Context, userID string) (*model.User, error)
