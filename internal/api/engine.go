@@ -13,6 +13,7 @@ import (
 	userRepo "github.com/khaivutri/bookmark-service/internal/repository/user"
 	"github.com/khaivutri/bookmark-service/internal/service"
 	userSvc "github.com/khaivutri/bookmark-service/internal/service/user"
+	"github.com/khaivutri/bookmark-service/pkg/jwtutils"
 	"github.com/khaivutri/bookmark-service/pkg/utils"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -34,15 +35,30 @@ type engine struct {
 
 	redis 		*redis.Client
 	db 			*gorm.DB
+
+	jwtGen    	jwtutils.JWTGenerator
+	jwtVal   	jwtutils.JWTValidator
 }
 
+type EngineOpts struct {
+	App 		*gin.Engine
+	Cfg 		*Config
+
+	Redis 		*redis.Client
+	DB 			*gorm.DB
+	JWTGen    	jwtutils.JWTGenerator
+	JWTVal   	jwtutils.JWTValidator
+}
 // NewEngine creates and returns a new Engine instance with initialized routes.
-func NewEngine(cfg *Config, client *redis.Client, db *gorm.DB) Engine{
+func NewEngine(opts EngineOpts) Engine{
 	app := &engine{
-		app : gin.Default(),
-		cfg : cfg,
-		redis : client,
-		db: db,
+		app : 		opts.App,
+		cfg : 		opts.Cfg,
+		redis : 	opts.Redis,
+		db: 		opts.DB,
+		jwtGen: 	opts.JWTGen,
+		jwtVal: 	opts.JWTVal,
+	
 	}
 	app.initRoutes()
 	return app
@@ -76,7 +92,7 @@ func (e *engine) initHandlers() *handlers {
 
 	userRepo := userRepo.NewSqlRepository(e.db)
 	hasher := utils.NewHasher()
-	userSvc := userSvc.NewService(userRepo, hasher)
+	userSvc := userSvc.NewService(userRepo, hasher, e.jwtGen)
 	registerHandler := userHandler.NewHandler(userSvc)
 	return &handlers{healthCheck, shortenURL, registerHandler}
 }
@@ -100,6 +116,7 @@ func (e *engine) initRoutes(){
 		users := v1.Group("/users")
 		{
 			users.POST("/register", allHandlers.registerHandler.Register)
+			users.POST("/login", allHandlers.registerHandler.Login)
 		}
 	}
 }

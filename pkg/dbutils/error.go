@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"gorm.io/gorm"
 )
 
 type errorFilter = []func(err error) (bool, error)
@@ -12,7 +13,7 @@ type errorFilter = []func(err error) (bool, error)
 var (
 	ErrDuplicateUserName = errors.New("username already exists")
 	ErrDuplicateEmail    = errors.New("email already exists")
-	//ErrRecordNotFound    = errors.New("record not found")
+	ErrRecordNotFound    = errors.New("record not found")
 )
 
 func filterDuplicateUserName(err error) (bool, error) {
@@ -39,9 +40,25 @@ func filterDuplicateEmail(err error) (bool, error) {
 		strings.Contains(msg, "users.email"), ErrDuplicateEmail
 }
 
+
+func filterRecordNotFound(err error) (bool, error) {
+	// GORM: record not found (First/Take/Last failed to find row)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return true, ErrRecordNotFound
+	}
+	// PostgreSQL: record not found
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+		return true, ErrRecordNotFound
+	}
+	// SQLite: no such table
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "no such table"), ErrRecordNotFound
+}
 var filters errorFilter = []func(error) (bool, error){
 	filterDuplicateUserName,
 	filterDuplicateEmail,
+	filterRecordNotFound,
 }
 
 func ParseDBError(err error) error {
