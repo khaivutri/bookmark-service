@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -32,14 +33,14 @@ func TestNewJWTGenerator(t *testing.T) {
 		{
 			name: "returns an error when the file does not exist",
 			path: func(t *testing.T) string {
-				return t.TempDir() + string(os.PathSeparator) + "missing.pem"
+				return filepath.Join(t.TempDir(), "missing.pem")
 			},
 			wantErr: true,
 		},
 		{
 			name: "returns an error for invalid PEM data",
 			path: func(t *testing.T) string {
-				path := t.TempDir() + string(os.PathSeparator) + "invalid.pem"
+				path := filepath.Join(t.TempDir(), "invalid.pem")
 				require.NoError(t, os.WriteFile(path, []byte("not a private key"), 0o600))
 				return path
 			},
@@ -126,7 +127,7 @@ func writePrivateKey(t *testing.T) string {
 		Type:  "PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	})
-	path := t.TempDir() + string(os.PathSeparator) + "private.pem"
+	path := filepath.Join(t.TempDir(), "private.pem")
 	require.NoError(t, os.WriteFile(path, data, 0o600))
 	return path
 }
