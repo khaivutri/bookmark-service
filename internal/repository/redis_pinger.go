@@ -14,12 +14,12 @@ type RedisPinger struct {
 	client *redis.Client
 }
 
-// NewRedisPinger returns a new RedisPinger
+// NewRedisPinger constructs a new RedisPinger instance.
 func NewRedisPinger(client *redis.Client) *RedisPinger {
 	return &RedisPinger{client: client}
 }
 
-// Ping pings the redis client
+// Ping checks the connectivity to the Redis client.
 func (p *RedisPinger) Ping(ctx context.Context) error {
 	return p.client.Ping(ctx).Err()
 }

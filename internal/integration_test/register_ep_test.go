@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/api"
 	fixture "github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
@@ -106,7 +107,12 @@ func TestUserRegisterEndpoint(t *testing.T) {
 
             db := tc.setupDB(t)
 
-            testAPI := api.NewEngine(cfg, redisClient, db)
+            testAPI := api.NewEngine(api.EngineOpts{
+                App:        gin.New(),
+                Cfg:        cfg,
+                Redis:      redisClient,
+                DB:         db,
+            })
 
             req := httptest.NewRequest(tc.reqMethod, tc.reqPath, bytes.NewBufferString(tc.reqBody))
             req.Header.Set("Content-Type", "application/json")

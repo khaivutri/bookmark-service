@@ -9,8 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// HealthCheck defines the interface for health check handler.
+// HealthCheck defines the interface for the health check handler.
 type HealthCheck interface {
+	// HealthCheck processes the API request to inspect the service status.
 	HealthCheck(ctx *gin.Context)
 }
 
@@ -23,7 +24,7 @@ func NewHealthCheck(isHealthy service.HealthCheck) HealthCheck {
 	return &healthCheck{IsHealthy: isHealthy}
 }
 
-// HealthCheck handles the health check HTTP request.
+// HealthCheck processes the API request to inspect the service dependency status.
 //@Summary Health Check
 //@Tags Health Check
 //@Accept json

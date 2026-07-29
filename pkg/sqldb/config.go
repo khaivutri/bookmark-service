@@ -22,6 +22,7 @@ func newConfig(envPrefix string) (*config, error) {
 	return cfg, nil
 }
 
+// GetDSN returns the connection string (Data Source Name) for PostgreSQL.
 func (cfg *config) GetDSN() string {
 	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", 
 						cfg.Host, cfg.User, cfg.Password, cfg.DBName, cfg.Port)

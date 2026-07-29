@@ -1,7 +1,6 @@
 package user_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -12,11 +11,11 @@ import (
 	repoUser "github.com/khaivutri/bookmark-service/internal/repository/user"
 	serviceUser "github.com/khaivutri/bookmark-service/internal/service/user"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
+	jwtMocks "github.com/khaivutri/bookmark-service/pkg/jwtutils/mocks"
 	utilMocks "github.com/khaivutri/bookmark-service/pkg/utils/mocks"
 )
 
 func TestService_CreateUser_IntegrationWithFixture(t *testing.T) {
-	ctx := context.Background()
 
 	db := fixture.NewFixture(t, &fixture.UserCommonTest{})
 	realRepo := repoUser.NewSqlRepository(db)
@@ -124,33 +123,35 @@ func TestService_CreateUser_IntegrationWithFixture(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			mockHasher := utilMocks.NewHasher(t)
-			tt.setupMock(mockHasher)
+			tc.setupMock(mockHasher)
+			ctx := t.Context()
 
-			svc := serviceUser.NewService(realRepo, mockHasher)
+			jwtGen := jwtMocks.NewJWTGenerator(t)
+			svc := serviceUser.NewService(realRepo, mockHasher, jwtGen)
 			createdUser, err := svc.CreateUser(
 				ctx,
-				tt.input.userName,
-				tt.input.displayName,
-				tt.input.password,
-				tt.input.email,
+				tc.input.userName,
+				tc.input.displayName,
+				tc.input.password,
+				tc.input.email,
 			)
 
 			// Assert
-			if tt.expectedError != nil {
+			if tc.expectedError != nil {
 				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err)
+				assert.Equal(t, tc.expectedError, err)
 				assert.Nil(t, createdUser)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, createdUser)
 				assert.NotEmpty(t, createdUser.ID)
-				assert.Equal(t, tt.expectedUser.UserName, createdUser.UserName)
-				assert.Equal(t, tt.expectedUser.DisplayName, createdUser.DisplayName)
-				assert.Equal(t, tt.expectedUser.Password, createdUser.Password)
-				assert.Equal(t, tt.expectedUser.Email, createdUser.Email)
+				assert.Equal(t, tc.expectedUser.UserName, createdUser.UserName)
+				assert.Equal(t, tc.expectedUser.DisplayName, createdUser.DisplayName)
+				assert.Equal(t, tc.expectedUser.Password, createdUser.Password)
+				assert.Equal(t, tc.expectedUser.Email, createdUser.Email)
 			}
 		})
 	}

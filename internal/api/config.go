@@ -17,7 +17,7 @@ type Config struct {
 	BasePath 		string 		`default:"/" envconfig:"BASE_PATH"`
 }
 
-// NewConfig creates a new Config instance and loads the configuration from environment variables or a .env file.
+// NewConfig loads application settings from environment variables or a .env file.
 func NewConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")

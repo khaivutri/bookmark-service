@@ -7,6 +7,7 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 )
 
+// CreateUser inserts a user record into the database.
 func (r *sqlRepository) CreateUser(ctx context.Context, newUser *model.User) (*model.User, error) {
 	err := r.db.WithContext(ctx).Create(newUser).Error
 	if err != nil {

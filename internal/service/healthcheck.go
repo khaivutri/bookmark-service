@@ -10,8 +10,9 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/repository"
 )
 
-// HealthCheck defines the interface for health check service.
+// HealthCheck defines the interface for the health check service.
 type HealthCheck interface {
+	// Check verifies the connectivity of Redis and database adapters.
 	Check(ctx context.Context) (*model.HealthReport, error)
 }
 type redisPinger interface {
@@ -30,7 +31,7 @@ type healthCheck struct {
 	dbAdapter    	dbPinger
 }
 
-// NewHealthCheck creates and returns a new HealthCheck service instance.
+// NewHealthCheck constructs a new HealthCheck service instance.
 func NewHealthCheck(serviceName, instanceID string, redisAdapter redisPinger, dbAdapter dbPinger) HealthCheck {
 	return &healthCheck{	
 							serviceName: 	serviceName,
@@ -40,7 +41,7 @@ func NewHealthCheck(serviceName, instanceID string, redisAdapter redisPinger, db
 						}
 }
 
-// Check returns the health status report for the service.
+// Check verifies the connectivity of Redis and database adapters.
 func (hc *healthCheck) Check(ctx context.Context) (*model.HealthReport, error) {
 	dpc := make(map[string]string)
 

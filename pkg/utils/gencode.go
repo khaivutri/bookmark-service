@@ -7,19 +7,21 @@ import (
 
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-// GenCode interface
+// GenCode generates secure random alphanumeric codes of a given length.
 type GenCode interface {
+	// Generate creates a secure random code of the specified length.
 	Generate(codeLen int) (string, error)
 }
 
 type genCode struct {
 }
 
+// NewGenCode constructs a new code generator.
 func NewGenCode() GenCode {
 	return &genCode{}
 }
 
-// Generate generates a random code
+// Generate generates a secure random code of the specified length.
 func (g *genCode) Generate(codeLen int) (string, error) {
 	code := make([]byte, codeLen)
 

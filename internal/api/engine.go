@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/docs"
+	"github.com/khaivutri/bookmark-service/internal/api/middleware"
 	"github.com/khaivutri/bookmark-service/internal/handler"
 	v1 "github.com/khaivutri/bookmark-service/internal/handler/v1"
 	userHandler "github.com/khaivutri/bookmark-service/internal/handler/v1/user"
@@ -13,6 +14,7 @@ import (
 	userRepo "github.com/khaivutri/bookmark-service/internal/repository/user"
 	"github.com/khaivutri/bookmark-service/internal/service"
 	userSvc "github.com/khaivutri/bookmark-service/internal/service/user"
+	"github.com/khaivutri/bookmark-service/pkg/jwtutils"
 	"github.com/khaivutri/bookmark-service/pkg/utils"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -22,9 +24,11 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// Engine defines the interface for the API engine.
+// Engine defines the interface for running and serving the API engine.
 type Engine interface {
+	// Start runs the HTTP server listening on the configured application port.
 	Start() error
+	// ServeHTTP routes HTTP requests to the underlying router (useful for testing).
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
@@ -34,26 +38,42 @@ type engine struct {
 
 	redis 		*redis.Client
 	db 			*gorm.DB
+
+	jwtGen    	jwtutils.JWTGenerator
+	jwtVal   	jwtutils.JWTValidator
 }
 
-// NewEngine creates and returns a new Engine instance with initialized routes.
-func NewEngine(cfg *Config, client *redis.Client, db *gorm.DB) Engine{
+type EngineOpts struct {
+	App 		*gin.Engine
+	Cfg 		*Config
+
+	Redis 		*redis.Client
+	DB 			*gorm.DB
+
+	JWTGen    	jwtutils.JWTGenerator
+	JWTVal   	jwtutils.JWTValidator
+}
+// NewEngine initializes and returns a new Engine instance with defined routes and handlers.
+func NewEngine(opts EngineOpts) Engine{
 	app := &engine{
-		app : gin.Default(),
-		cfg : cfg,
-		redis : client,
-		db: db,
+		app : 		opts.App,
+		cfg : 		opts.Cfg,
+		redis : 	opts.Redis,
+		db: 		opts.DB,
+		jwtGen: 	opts.JWTGen,
+		jwtVal: 	opts.JWTVal,
+	
 	}
 	app.initRoutes()
 	return app
 }
 
-// Start runs the API server on the configured port.
+// Start runs the HTTP server listening on the configured application port.
 func (e *engine) Start() error {
 	return e.app.Run(fmt.Sprintf(":%s", e.cfg.AppPort))
 }
 
-// ServeHTTP serves the HTTP request using the underlying Gin engine.
+// ServeHTTP routes HTTP requests to the underlying Gin engine.
 func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.app.ServeHTTP(w, r)
 }
@@ -76,7 +96,7 @@ func (e *engine) initHandlers() *handlers {
 
 	userRepo := userRepo.NewSqlRepository(e.db)
 	hasher := utils.NewHasher()
-	userSvc := userSvc.NewService(userRepo, hasher)
+	userSvc := userSvc.NewService(userRepo, hasher, e.jwtGen)
 	registerHandler := userHandler.NewHandler(userSvc)
 	return &handlers{healthCheck, shortenURL, registerHandler}
 }
@@ -84,6 +104,9 @@ func (e *engine) initHandlers() *handlers {
 func (e *engine) initRoutes(){
 	allHandlers := e.initHandlers()
 	e.app.HandleMethodNotAllowed = true	
+	
+	// init middlewares
+	jwtAuth := middleware.NewJWTAuth(e.jwtVal)
 	
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -100,6 +123,14 @@ func (e *engine) initRoutes(){
 		users := v1.Group("/users")
 		{
 			users.POST("/register", allHandlers.registerHandler.Register)
+			users.POST("/login", allHandlers.registerHandler.Login)
+		}
+
+		self := v1.Group("/self")
+		{	
+			self.Use(jwtAuth.JWTAuth())
+			self.GET("/info", allHandlers.registerHandler.GetSelfInfo)
+			self.PUT("/info", allHandlers.registerHandler.UpdateSelfInfo)
 		}
 	}
 }

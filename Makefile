@@ -111,6 +111,11 @@ docker-login:
 
 docker-release:
 	docker push $(IMG_NAME):$(IMG_TAG)
+
+generate-rsa-key:
+	openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+	openssl rsa -pubout -in private.pem -out public.pem
+
 clean:
 	rm -rf $(BIN_DIR) coverage.out coverage.html coverage.tmp
 

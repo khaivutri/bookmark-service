@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/api"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
 	"github.com/khaivutri/bookmark-service/pkg/sqldb"
@@ -147,7 +148,12 @@ func TestHealthCheckEndpoint(t *testing.T) {
 				assert.NoError(t, sqlDB.Close())
 			}
 
-			testAPI := api.NewEngine(cfg, redisClient, dbClient)
+			testAPI := api.NewEngine(api.EngineOpts{
+				App: 		gin.New(),
+				Cfg: 		cfg,
+				Redis: 		redisClient,
+				DB: 		dbClient,
+			})
 
 			req, _ := http.NewRequest(tc.reqMethod, tc.reqPath, nil)
 			recorder := httptest.NewRecorder()

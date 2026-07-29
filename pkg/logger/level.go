@@ -3,7 +3,7 @@ package logger
 import "github.com/rs/zerolog"
 
 
-// SetLogLevel sets the global log level
+// SetLogLevel parses and sets the global logging level.
 func SetLogLevel(levelStr string) {
 	level := zerolog.NoLevel
 
