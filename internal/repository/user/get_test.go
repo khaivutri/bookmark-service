@@ -67,6 +67,13 @@ type userLookupCase struct {
 	expectedErr  error
 }
 
+type userUpdateCase struct {
+	name         string
+	inputUser    *model.User
+	expectedErr  error
+	verifyStored bool
+}
+
 func testUserLookup(t *testing.T, lookup func(*sqlRepository, context.Context, string) (*model.User, error), cases []userLookupCase) {
 	t.Helper()
 
@@ -152,12 +159,7 @@ func TestSqlRepository_GetUserByID(t *testing.T) {
 func TestSqlRepository_UpdateUser(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
-		name         string
-		inputUser    *model.User
-		expectedErr  error
-		verifyStored bool
-	}{
+	testCases := []userUpdateCase{
 		{
 			name: "update existing user successfully",
 			inputUser: &model.User{
@@ -204,20 +206,24 @@ func TestSqlRepository_UpdateUser(t *testing.T) {
 		},
 	}
 
+	testUserUpdates(t, testCases)
+}
+
+func testUserUpdates(t *testing.T, testCases []userUpdateCase) {
+	t.Helper()
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			repo, db := newTestRepository(t)
 			err := repo.UpdateUser(t.Context(), tc.inputUser)
-
 			if tc.expectedErr != nil {
 				if !errors.Is(err, tc.expectedErr) {
 					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
 				}
 				return
 			}
-
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

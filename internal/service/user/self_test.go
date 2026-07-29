@@ -32,6 +32,14 @@ type updateSelfInfoTestCase struct {
 	expectedErr      error
 }
 
+type getSelfInfoTestCase struct {
+	name          string
+	setupMockRepo func(t *testing.T) *mocks.Repository
+	inputUserID   string
+	expectedUser  *model.User
+	expectedErr   error
+}
+
 func runUpdateSelfInfoTest(t *testing.T, tc updateSelfInfoTestCase) {
 	t.Helper()
 	t.Parallel()
@@ -53,17 +61,36 @@ func runUpdateSelfInfoTest(t *testing.T, tc updateSelfInfoTestCase) {
 	}
 }
 
+func runGetSelfInfoTest(t *testing.T, tc getSelfInfoTestCase) {
+	t.Helper()
+	t.Parallel()
+
+	repo := tc.setupMockRepo(t)
+	svc := newTestService(repo)
+	user, err := svc.GetSelfInfo(context.Background(), tc.inputUserID)
+
+	if tc.expectedErr != nil {
+		if !errors.Is(err, tc.expectedErr) {
+			t.Errorf("expected error %v, got %v", tc.expectedErr, err)
+		}
+		if user != nil {
+			t.Errorf("expected nil user on error, got %+v", user)
+		}
+		return
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if user != tc.expectedUser {
+		t.Errorf("expected user %+v, got %+v", tc.expectedUser, user)
+	}
+}
+
 func TestSelf_GetSelfInfo(t *testing.T) {
 	t.Parallel()
 
-	testcases := []struct {
-		name          string
-		setupMockRepo func(t *testing.T) *mocks.Repository
-		inputUserID   string
-
-		expectedUser *model.User
-		expectedErr  error
-	}{
+	testcases := []getSelfInfoTestCase{
 		{
 			name: "success - repository returns user",
 			setupMockRepo: func(t *testing.T) *mocks.Repository {
@@ -93,31 +120,7 @@ func TestSelf_GetSelfInfo(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			repo := tc.setupMockRepo(t)
-			svc := newTestService(repo)
-
-			user, err := svc.GetSelfInfo(context.Background(), tc.inputUserID)
-
-			if tc.expectedErr != nil {
-				if !errors.Is(err, tc.expectedErr) {
-					t.Errorf("expected error %v, got %v", tc.expectedErr, err)
-				}
-				if user != nil {
-					t.Errorf("expected nil user on error, got %+v", user)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if user != tc.expectedUser {
-				t.Errorf("expected user %+v, got %+v", tc.expectedUser, user)
-			}
-		})
+		t.Run(tc.name, func(t *testing.T) { runGetSelfInfoTest(t, tc) })
 	}
 }
 
@@ -142,7 +145,6 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 					Return(existing, nil).
 					Once()
 
-		
 				repo.On("UpdateUser", mock.Anything, mock.MatchedBy(func(u *model.User) bool {
 					return u.ID == "user-1" &&
 						u.DisplayName == "New Name" &&
@@ -165,7 +167,7 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 				repo.On("GetUserByID", mock.Anything, "unknown-id").
 					Return(nil, errors.New("record not found")).
 					Once()
-				
+
 				return repo
 			},
 			inputUserID:      "unknown-id",
