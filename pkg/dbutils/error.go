@@ -40,27 +40,21 @@ func filterDuplicateEmail(err error) (bool, error) {
 		strings.Contains(msg, "users.email"), ErrDuplicateEmail
 }
 
-
 func filterRecordNotFound(err error) (bool, error) {
 	// GORM: record not found (First/Take/Last failed to find row)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return true, ErrRecordNotFound
 	}
-	// PostgreSQL: record not found
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23503" {
-		return true, ErrRecordNotFound
-	}
-	// SQLite: no such table
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "no such table"), ErrRecordNotFound
+	return false, nil
 }
+
 var filters errorFilter = []func(error) (bool, error){
 	filterDuplicateUserName,
 	filterDuplicateEmail,
 	filterRecordNotFound,
 }
 
+// ParseDBError maps raw database/GORM errors to unified business errors.
 func ParseDBError(err error) error {
 	if err == nil {
 		return nil

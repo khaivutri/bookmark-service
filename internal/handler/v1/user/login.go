@@ -22,6 +22,7 @@ import (
 // @Failure      400  {object}  response.ErrMessage  "Bad Request / Invalid credentials"
 // @Failure      500  {object}  response.ErrMessage  "Internal Server Error"
 // @Router       /v1/users/login [post]
+// Login handles user authentication requests.
 func (u *userHandler) Login(ctx *gin.Context) {
 	body, err := requestutils.BindInputFromResquest[userDTO.LoginRequest](ctx)
 	if err != nil {

@@ -11,12 +11,12 @@ type DBPinger struct {
 	db *gorm.DB
 }
 
-// NewDBPinger returns a new DBPinger.
+// NewDBPinger constructs a new DBPinger instance.
 func NewDBPinger(db *gorm.DB) *DBPinger {
 	return &DBPinger{db: db}
 }
 
-// Ping verifies the database connection by retrieving the sql.DB and pinging it.
+// Ping verifies the database connection status.
 func (p *DBPinger) Ping(ctx context.Context) error {
 	if p.db == nil {
 		return ErrDependencyDown

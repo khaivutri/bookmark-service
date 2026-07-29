@@ -9,12 +9,15 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/utils"
 )
 
+// Service abstracts the business logic for users.
 type Service interface {
+	// CreateUser hashes the password and registers a new user account.
 	CreateUser(ctx context.Context, userName, displayName, password, email string) (*model.User, error)
+	// UpdateSelfInfo updates email and display name info for a user.
 	UpdateSelfInfo(ctx context.Context, userID, displayName, email string) (error)
-	
+	// Login authenticates credentials and yields a signed JWT token.
 	Login(ctx context.Context, userName, password string) (string, error)
-
+	// GetSelfInfo retrieves user information by userID.
 	GetSelfInfo(ctx context.Context, userID string) (*model.User, error)
 }
 
@@ -24,6 +27,7 @@ type service struct {
 	jwtGenerator 		jwtutils.JWTGenerator
 }
 
+// NewService constructs a new user Service instance.
 func NewService(repo user.Repository, hasher utils.Hasher, jwtGenerator jwtutils.JWTGenerator) Service {
 	return &service{	repo: 	repo, 
 						hasher: hasher,

@@ -36,6 +36,7 @@ func isPasswordValid(password string) bool {
 	return hasUpper && hasLower && hasNumber && hasSpecial
 }
 
+// RegisterValidation registers custom validation rules with the Gin validator engine.
 func RegisterValidation() error {
 	v, ok := binding.Validator.Engine().(*validator.Validate)
 	if !ok {

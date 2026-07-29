@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-
 var sampleUser = &model.User{
 	ID:          "b649b57b-b7b6-44e4-a233-74147ecf56ee",
 	DisplayName: "Test1",
@@ -22,6 +21,36 @@ var sampleUser = &model.User{
 
 func newTestService(repo *mocks.Repository) *service {
 	return &service{repo: repo}
+}
+
+type updateSelfInfoTestCase struct {
+	name             string
+	setupMockRepo    func(t *testing.T) *mocks.Repository
+	inputUserID      string
+	inputDisplayName string
+	inputEmail       string
+	expectedErr      error
+}
+
+func runUpdateSelfInfoTest(t *testing.T, tc updateSelfInfoTestCase) {
+	t.Helper()
+	t.Parallel()
+
+	repo := tc.setupMockRepo(t)
+	svc := newTestService(repo)
+
+	err := svc.UpdateSelfInfo(context.Background(), tc.inputUserID, tc.inputDisplayName, tc.inputEmail)
+
+	if tc.expectedErr != nil {
+		if !errors.Is(err, tc.expectedErr) {
+			t.Errorf("expected error %v, got %v", tc.expectedErr, err)
+		}
+		return
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 }
 
 func TestSelf_GetSelfInfo(t *testing.T) {
@@ -64,7 +93,6 @@ func TestSelf_GetSelfInfo(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -96,15 +124,7 @@ func TestSelf_GetSelfInfo(t *testing.T) {
 func TestSelf_UpdateSelfInfo(t *testing.T) {
 	t.Parallel()
 
-	testcases := []struct {
-		name              string
-		setupMockRepo     func(t *testing.T) *mocks.Repository
-		inputUserID       string
-		inputDisplayName  string
-		inputEmail        string
-
-		expectedErr error
-	}{
+	testcases := []updateSelfInfoTestCase{
 		{
 			name: "success - updates display name and email, keeps other fields",
 			setupMockRepo: func(t *testing.T) *mocks.Repository {
@@ -122,9 +142,7 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 					Return(existing, nil).
 					Once()
 
-				// Xác nhận UpdateUser được gọi với đúng user đã được sửa
-				// DisplayName/Email, và các field khác (UserName, Password, ID)
-				// không bị ghi đè.
+		
 				repo.On("UpdateUser", mock.Anything, mock.MatchedBy(func(u *model.User) bool {
 					return u.ID == "user-1" &&
 						u.DisplayName == "New Name" &&
@@ -147,8 +165,7 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 				repo.On("GetUserByID", mock.Anything, "unknown-id").
 					Return(nil, errors.New("record not found")).
 					Once()
-				// Không stub UpdateUser: nếu code gọi nhầm, testify mock sẽ
-				// tự fail test vì gặp method call không được khai báo.
+				
 				return repo
 			},
 			inputUserID:      "unknown-id",
@@ -212,24 +229,6 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 
 	for _, tc := range testcases {
 		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			repo := tc.setupMockRepo(t)
-			svc := newTestService(repo)
-
-			err := svc.UpdateSelfInfo(context.Background(), tc.inputUserID, tc.inputDisplayName, tc.inputEmail)
-
-			if tc.expectedErr != nil {
-				if !errors.Is(err, tc.expectedErr) {
-					t.Errorf("expected error %v, got %v", tc.expectedErr, err)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-		})
+		t.Run(tc.name, func(t *testing.T) { runUpdateSelfInfoTest(t, tc) })
 	}
 }

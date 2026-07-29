@@ -11,6 +11,7 @@ var (
 	ErrFailUpdateUser = errors.New("failed to update user")
 )
 
+// GetSelfInfo retrieves user information by userID.
 func (s *service) GetSelfInfo(ctx context.Context, userID string) (*model.User, error) {
 	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {
@@ -19,6 +20,7 @@ func (s *service) GetSelfInfo(ctx context.Context, userID string) (*model.User, 
 	return user, nil
 }
 
+// UpdateSelfInfo updates email and display name info for a user.
 func (s *service) UpdateSelfInfo(ctx context.Context, userID, displayName, email string) error {
 	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {

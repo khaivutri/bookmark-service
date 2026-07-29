@@ -15,7 +15,9 @@ import (
 
 // ShortenURL defines the interface for handling URL shortening operations.
 type ShortenURL interface {
+	// CreateShortenLink processes the HTTP request to shorten a URL.
 	CreateShortenLink(ctx *gin.Context) 
+	// Redirect processes the HTTP request to redirect the client to the original URL.
 	Redirect( ctx *gin.Context)
 }
 

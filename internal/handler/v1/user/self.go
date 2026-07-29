@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// GetSelfInfo   get your current information
+// GetSelfInfo handles retrieval of profile information for the logged-in user.
 // @Summary      get your current information
 // @Description  get your current information
 // @Tags         User
@@ -37,7 +37,7 @@ func (u *userHandler) GetSelfInfo(ctx *gin.Context) {
 }
 
 
-// UpdateSelfInfo updates the current user's profile information
+// UpdateSelfInfo updates the profile information of the logged-in user.
 // @Summary      Update user profile
 // @Description  Updates the authenticated user's display name and email address.
 // @Tags         User

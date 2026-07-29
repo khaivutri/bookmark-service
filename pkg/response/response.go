@@ -22,6 +22,7 @@ var (
 	}
 )
 
+// InputFieldErrorResponse parses a validation error and formats it into an ErrMessage response.
 func InputFieldErrorResponse(err error) ErrMessage {
 	if ok := errors.As(err, &validator.ValidationErrors{}); !ok {
 		return InputErrResponse

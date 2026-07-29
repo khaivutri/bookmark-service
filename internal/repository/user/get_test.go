@@ -7,6 +7,7 @@ import (
 
 	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 
@@ -59,126 +60,93 @@ func assertUserEqual(t *testing.T, want, got *model.User) {
 	}
 }
 
-func TestSqlRepository_GetUserByUserName(t *testing.T) {
-	t.Parallel()
+type userLookupCase struct {
+	name         string
+	input        string
+	expectedUser *model.User
+	expectedErr  error
+}
 
-	testCases := []struct {
-		name          string
-		inputUserName string
-		expectedUser  *model.User
-		expectedErr   error
-	}{
-		{
-			name:          "existing user - returns user successfully",
-			inputUserName: "test1",
-			expectedUser:  existingUser1,
-			expectedErr:   nil,
-		},
-		{
-			name:          "another existing user - returns user successfully",
-			inputUserName: "test2",
-			expectedUser:  existingUser2,
-			expectedErr:   nil,
-		},
-		{
-			name:          "user not found - returns parsed not found error",
-			inputUserName: "non_existent_user",
-			expectedUser:  nil,
-			expectedErr:   dbutils.ParseDBError(gorm.ErrRecordNotFound),
-		},
-		{
-			name:          "empty user name - returns not found error",
-			inputUserName: "",
-			expectedUser:  nil,
-			expectedErr:   dbutils.ParseDBError(gorm.ErrRecordNotFound),
-		},
-	}
+func testUserLookup(t *testing.T, lookup func(*sqlRepository, context.Context, string) (*model.User, error), cases []userLookupCase) {
+	t.Helper()
 
-	for _, tc := range testCases {
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			repo, _ := newTestRepository(t)
-
-			user, err := repo.GetUserByUserName(context.Background(), tc.inputUserName)
+			got, err := lookup(repo, t.Context(), tc.input)
 
 			if tc.expectedErr != nil {
-				if err == nil {
-					t.Fatalf("expected error %v, got nil", tc.expectedErr)
-				}
-				if !errors.Is(err, tc.expectedErr) && err.Error() != tc.expectedErr.Error() {
-					t.Errorf("expected error %v, got %v", tc.expectedErr, err)
-				}
-				if user != nil {
-					t.Errorf("expected nil user on error, got %+v", user)
-				}
+				assert.ErrorIs(t, err, tc.expectedErr)
+				assert.Nil(t, got, "expected nil user on error")
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			assertUserEqual(t, tc.expectedUser, user)
+			assert.NoError(t, err)
+			assertUserEqual(t, tc.expectedUser, got)
 		})
 	}
+}
+
+func TestSqlRepository_GetUserByUserName(t *testing.T) {
+	t.Parallel()
+
+	testUserLookup(t, func(repo *sqlRepository, ctx context.Context, input string) (*model.User, error) {
+		return repo.GetUserByUserName(ctx, input)
+	}, []userLookupCase{
+		{
+			name:         "existing user - returns user successfully",
+			input:        "test1",
+			expectedUser: existingUser1,
+			expectedErr:  nil,
+		},
+		{
+			name:         "another existing user - returns user successfully",
+			input:        "test2",
+			expectedUser: existingUser2,
+			expectedErr:  nil,
+		},
+		{
+			name:         "user not found - returns parsed not found error",
+			input:        "non_existent_user",
+			expectedUser: nil,
+			expectedErr:  dbutils.ErrRecordNotFound,
+		},
+		{
+			name:         "empty user name - returns not found error",
+			input:        "",
+			expectedUser: nil,
+			expectedErr:  dbutils.ErrRecordNotFound,
+		},
+	})
 }
 
 func TestSqlRepository_GetUserByID(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
-		name         string
-		inputUserID  string
-		expectedUser *model.User
-		expectedErr  error
-	}{
+	testUserLookup(t, func(repo *sqlRepository, ctx context.Context, input string) (*model.User, error) {
+		return repo.GetUserByID(ctx, input)
+	}, []userLookupCase{
 		{
 			name:         "existing id - returns user successfully",
-			inputUserID:  existingUser1.ID,
+			input:        existingUser1.ID,
 			expectedUser: existingUser1,
 			expectedErr:  nil,
 		},
 		{
 			name:         "another existing id - returns user successfully",
-			inputUserID:  existingUser2.ID,
+			input:        existingUser2.ID,
 			expectedUser: existingUser2,
 			expectedErr:  nil,
 		},
 		{
 			name:         "id not found - returns parsed not found error",
-			inputUserID:  "00000000-0000-0000-0000-000000000000",
+			input:        "00000000-0000-0000-0000-000000000000",
 			expectedUser: nil,
-			expectedErr:  dbutils.ParseDBError(gorm.ErrRecordNotFound),
+			expectedErr:  dbutils.ErrRecordNotFound,
 		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			repo, _ := newTestRepository(t)
-
-			user, err := repo.GetUserByID(t.Context(), tc.inputUserID)
-
-			if tc.expectedErr != nil {
-				if err == nil {
-					t.Fatalf("expected error %v, got nil", tc.expectedErr)
-				}
-				if !errors.Is(err, tc.expectedErr) && err.Error() != tc.expectedErr.Error() {
-					t.Errorf("expected error %v, got %v", tc.expectedErr, err)
-				}
-				if user != nil {
-					t.Errorf("expected nil user on error, got %+v", user)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			assertUserEqual(t, tc.expectedUser, user)
-		})
-	}
+	})
 }
 
 func TestSqlRepository_UpdateUser(t *testing.T) {

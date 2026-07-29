@@ -13,6 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	privateKeyPath = "./private.pem"
+	publicKeyPath  = "./public.pem"
+)
+
 //	@title Bookmark Service API
 //	@version 2.0
 //	@description This is a simple REST API for a bookmark service - Demo MLIoT Lab.
@@ -30,7 +35,7 @@ func main() {
 	if err := validation.RegisterValidation(); err != nil {
 		panic(err)
 	}
-	//set log level 
+	//set log level
 	logger.SetLogLevel(cfg.LogLevel)
 
 	//set redis client
@@ -47,33 +52,33 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	engine := createAPIApp(cfg, redisClient, dbClient)
-	
+
 	err = engine.Start()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func createAPIApp(cfg *api.Config, redis *redis.Client, db *gorm.DB) api.Engine{
+func createAPIApp(cfg *api.Config, redis *redis.Client, db *gorm.DB) api.Engine {
 	app := gin.New()
 
-	jwtGen, err := jwtutils.NewJWTGenerator("./private.pem")
+	jwtGen, err := jwtutils.NewJWTGenerator(privateKeyPath)
 	if err != nil {
 		panic(err)
 	}
-	jwtVal, err := jwtutils.NewJWTValidator("./public.pem")
+	jwtVal, err := jwtutils.NewJWTValidator(publicKeyPath)
 	if err != nil {
 		panic(err)
 	}
 	a := api.NewEngine(api.EngineOpts{
-		App: 		app,
-		Cfg: 		cfg,
-		Redis: 		redis,
-		DB: 		db,
-		JWTGen: 	jwtGen,
-		JWTVal: 	jwtVal,
+		App:    app,
+		Cfg:    cfg,
+		Redis:  redis,
+		DB:     db,
+		JWTGen: jwtGen,
+		JWTVal: jwtVal,
 	})
 	return a
-}	
+}

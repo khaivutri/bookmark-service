@@ -23,6 +23,7 @@ import (
 // @Failure      400  {object}  map[string]string  "Bad Request"
 // @Failure      500  {object}  map[string]string  "Internal Server Error"
 // @Router       /v1/users/register [post]
+// Register handles user registration requests.
 func (u *userHandler) Register(ctx *gin.Context) {
 	body, err := requestutils.BindInputFromResquest[userDTO.RegisterRequest](ctx)
 	if err != nil {

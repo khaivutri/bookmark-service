@@ -24,9 +24,11 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// Engine defines the interface for the API engine.
+// Engine defines the interface for running and serving the API engine.
 type Engine interface {
+	// Start runs the HTTP server listening on the configured application port.
 	Start() error
+	// ServeHTTP routes HTTP requests to the underlying router (useful for testing).
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
@@ -51,7 +53,7 @@ type EngineOpts struct {
 	JWTGen    	jwtutils.JWTGenerator
 	JWTVal   	jwtutils.JWTValidator
 }
-// NewEngine creates and returns a new Engine instance with initialized routes.
+// NewEngine initializes and returns a new Engine instance with defined routes and handlers.
 func NewEngine(opts EngineOpts) Engine{
 	app := &engine{
 		app : 		opts.App,
@@ -66,12 +68,12 @@ func NewEngine(opts EngineOpts) Engine{
 	return app
 }
 
-// Start runs the API server on the configured port.
+// Start runs the HTTP server listening on the configured application port.
 func (e *engine) Start() error {
 	return e.app.Run(fmt.Sprintf(":%s", e.cfg.AppPort))
 }
 
-// ServeHTTP serves the HTTP request using the underlying Gin engine.
+// ServeHTTP routes HTTP requests to the underlying Gin engine.
 func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.app.ServeHTTP(w, r)
 }

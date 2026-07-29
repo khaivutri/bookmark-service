@@ -19,6 +19,7 @@ func abortWithError(ctx *gin.Context, err error) error {
 	return err
 }
 
+// BindInputFromResquest binds and validates input from various parts of the HTTP request (JSON, URI, query, headers).
 func BindInputFromResquest[T any] (ctx *gin.Context) (*T, error) {
 	reqInput := new(T)
 

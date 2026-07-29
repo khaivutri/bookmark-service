@@ -15,6 +15,7 @@ var (
 	ErrInvalidCredential = errors.New("invalid credential")
 )
 
+// Login authenticates credentials and yields a signed JWT token.
 func (u *service) Login(ctx context.Context, userName, password string) (string, error) {
 	// check username 
 	user, err := u.repo.GetUserByUserName(ctx, userName)

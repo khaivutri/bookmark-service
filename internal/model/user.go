@@ -17,6 +17,7 @@ type User struct {
 	UpdatedAt   time.Time 	`json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+// BeforeCreate generates a new UUID for the user prior to inserting the record.
 func (u *User) BeforeCreate(tx *gorm.DB) ( err error) {
 	if u.ID == "" {
 		u.ID = uuid.New().String()

@@ -8,7 +8,9 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/jwtutils"
 )
 
-type JWTAuth interface {
+// JWTAuther defines the interface for creating a JWT authentication middleware.
+type JWTAuther interface {
+	// JWTAuth returns a Gin handler function that enforces JWT authentication.
 	JWTAuth() gin.HandlerFunc
 }
 
@@ -16,10 +18,12 @@ type jwtAuth struct {
 	jwtVal jwtutils.JWTValidator
 }
 
-func NewJWTAuth(jwtVal jwtutils.JWTValidator) JWTAuth {
+// NewJWTAuth initializes and returns a JWTAuther instance using a JWTValidator.
+func NewJWTAuth(jwtVal jwtutils.JWTValidator) JWTAuther {
 	return &jwtAuth{jwtVal: jwtVal}
 }
 
+// JWTAuth returns a Gin handler function that enforces JWT authentication.
 func (j *jwtAuth) JWTAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// get token from header

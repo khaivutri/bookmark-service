@@ -6,6 +6,7 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/model"
 )
 
+// CreateUser hashes the password and registers a new user account.
 func (s *service) CreateUser(ctx context.Context, userName, displayName, password, email string) (*model.User, error) {
 	// hash pwd 
 	hashPwd, err := s.hasher.Hash(password)

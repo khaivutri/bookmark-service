@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// NewClient initializes and returns a GORM database client based on environment configurations.
 func NewClient(envPrefix string) (*gorm.DB, error) {
 	cfg, err := newConfig(envPrefix)
 	if err != nil {
