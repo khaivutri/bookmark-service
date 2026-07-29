@@ -1,6 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/api"
 	"github.com/khaivutri/bookmark-service/internal/model"
@@ -14,9 +19,22 @@ import (
 )
 
 const (
-	privateKeyPath = "./private.pem"
-	publicKeyPath  = "./public.pem"
+	privateKeyEnv = "JWT_PRIVATE_KEY"
+	publicKeyEnv  = "JWT_PUBLIC_KEY"
 )
+
+func loadKeyFromEnv(envName string) ([]byte, error) {
+	value := strings.TrimSpace(os.Getenv(envName))
+	if value == "" {
+		return nil, fmt.Errorf("missing env %s", envName)
+	}
+
+	// Base64 is convenient for .env files; raw PEM is also accepted.
+	if decoded, err := base64.StdEncoding.DecodeString(value); err == nil {
+		return decoded, nil
+	}
+	return []byte(value), nil
+}
 
 //	@title Bookmark Service API
 //	@version 2.0
@@ -48,12 +66,23 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	privateKey, err := loadKeyFromEnv(privateKeyEnv)
+	if err != nil {
+		panic(err)
+	}
+	
+	publicKey, err := loadKeyFromEnv(publicKeyEnv)
+	if err != nil {
+		panic(err)
+	}
+
 	err = dbClient.AutoMigrate(&model.User{})
 	if err != nil {
 		panic(err)
 	}
 
-	engine := createAPIApp(cfg, redisClient, dbClient)
+	engine := createAPIApp(cfg, redisClient, dbClient, privateKey, publicKey)
 
 	err = engine.Start()
 	if err != nil {
@@ -61,14 +90,14 @@ func main() {
 	}
 }
 
-func createAPIApp(cfg *api.Config, redis *redis.Client, db *gorm.DB) api.Engine {
+func createAPIApp(cfg *api.Config, redis *redis.Client, db *gorm.DB, privateKey, publicKey []byte) api.Engine {
 	app := gin.New()
 
-	jwtGen, err := jwtutils.NewJWTGenerator(privateKeyPath)
+	jwtGen, err := jwtutils.NewJWTGeneratorFromPEM(privateKey)
 	if err != nil {
 		panic(err)
 	}
-	jwtVal, err := jwtutils.NewJWTValidator(publicKeyPath)
+	jwtVal, err := jwtutils.NewJWTValidatorFromPEM(publicKey)
 	if err != nil {
 		panic(err)
 	}
