@@ -1,4 +1,4 @@
-.PHONY: help deps tidy test run dev-run clean swagger docker-up docker-down docker-logs docker-redis docker-test docker-build docker-login docker-release
+.PHONY: help deps generate-rsa-key tidy test run dev-run clean swagger docker-up docker-down docker-logs docker-redis docker-test docker-build docker-login docker-release
 
 GIT_TAG := $(shell git describe --tags --exact-match --abbrev=0 2>/dev/null)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
@@ -33,6 +33,7 @@ help:
 	@echo "  make test              Run tests with coverage report"
 	@echo "  make run               Run the application"
 	@echo "  make clean             Remove build artifacts and coverage files"
+	@echo "  make generate-rsa-key  Generate RSA key pair"
 	@echo "  make swagger           Generate Swagger documentation"
 	@echo "  make dev-run           Run swagger then run the application (development)"
 	@echo "  make docker-up         Build and start services with docker-compose"
