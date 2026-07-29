@@ -24,7 +24,11 @@ func NewJWTValidator(publicKeyPath string) (JWTValidator, error) {
 	if err != nil {
 		return nil, err
 	}
+	return NewJWTValidatorFromPEM(publicKeyData)
+}
 
+// NewJWTValidatorFromPEM constructs a JWT validator from PEM-encoded key data.
+func NewJWTValidatorFromPEM(publicKeyData []byte) (JWTValidator, error) {
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyData)
 	if err != nil {
 		return nil, err
@@ -36,9 +40,10 @@ func NewJWTValidator(publicKeyPath string) (JWTValidator, error) {
 }
 
 var (
-	ErrInvalidToken = errors.New("invalid token")	
+	ErrInvalidToken = errors.New("invalid token")
 	ErrExtractToken = errors.New("failed to extract token")
 )
+
 // ValidateJWT verifies the token string signature using RSA public key and extracts claims.
 func (j *jwtValidator) ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
