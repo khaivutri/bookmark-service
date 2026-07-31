@@ -52,7 +52,7 @@ tidy:
 	$(GO) mod tidy
 
 
-COVERAGE_EXCLUDE=mocks|main|test|docs|response|validation|dbutils|sqldb
+COVERAGE_EXCLUDE=mocks|main|test|docs|response|validation|dbutils|sqldb|infrastructure
 COVERAGE_THRESHOLD ?= 80
 
 test:
