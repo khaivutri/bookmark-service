@@ -11,7 +11,7 @@ import (
 func (r *sqlRepository) GetUserByUserName(ctx context.Context, userName string) (*model.User, error) {
 	user := &model.User{}
 	
-	err := r.db.WithContext(ctx).Where("user_name = ?", userName).First(user).Error
+	err := r.db.WithContext(ctx).Where("username = ?", userName).First(user).Error
 	if err != nil {
 		return nil, dbutils.ParseDBError(err)
 	}
