@@ -27,3 +27,5 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=bookmark
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data:Z
