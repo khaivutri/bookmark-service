@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/pkg/sqldb"
 	"gorm.io/gorm"
 )
@@ -14,8 +13,14 @@ func createDB() *gorm.DB{
 	return dbClient
 }
 
+const migrationPath = "file://./migrations"
 func migrate(dbClient *gorm.DB) {
-	err := dbClient.AutoMigrate(&model.User{})
+	// err := dbClient.AutoMigrate(&model.User{})
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	err := sqldb.MigrateSQLDB(dbClient, migrationPath, "up", 0)
 	if err != nil {
 		panic(err)
 	}
