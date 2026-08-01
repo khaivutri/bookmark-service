@@ -7,12 +7,13 @@ import (
 
 	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/internal/repository/user/mocks"
+	"github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 
 	"github.com/stretchr/testify/mock"
 )
 
 var sampleUser = &model.User{
-	ID:          "b649b57b-b7b6-44e4-a233-74147ecf56ee",
+	Base:        fixture.GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ee"),
 	DisplayName: "Test1",
 	UserName:    "test1",
 	Password:    "pwd123",
@@ -134,7 +135,7 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 				repo := mocks.NewRepository(t)
 
 				existing := &model.User{
-					ID:          "user-1",
+					Base:        fixture.GetTestBase("user-1"),
 					DisplayName: "Old Name",
 					UserName:    "user1",
 					Password:    "pwd123",
@@ -181,7 +182,7 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 				repo := mocks.NewRepository(t)
 
 				existing := &model.User{
-					ID:          "user-3",
+					Base:        fixture.GetTestBase("user-3"),
 					DisplayName: "Old Name",
 					UserName:    "user3",
 					Email:       "old3@example.com",
@@ -207,7 +208,7 @@ func TestSelf_UpdateSelfInfo(t *testing.T) {
 				repo := mocks.NewRepository(t)
 
 				existing := &model.User{
-					ID:          "user-4",
+					Base:        fixture.GetTestBase("user-4"),
 					DisplayName: "Old Name",
 					UserName:    "user4",
 					Email:       "old4@example.com",

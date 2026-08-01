@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/khaivutri/bookmark-service/internal/api"
 	"github.com/khaivutri/bookmark-service/internal/model"
+	fixture "github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
 	"github.com/khaivutri/bookmark-service/pkg/sqldb"
 	"github.com/khaivutri/bookmark-service/pkg/utils"
@@ -234,7 +235,7 @@ func setupLoginDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	user := &model.User{
-		ID:          loginUserID,
+		Base:        fixture.GetTestBase(loginUserID),
 		DisplayName: loginDisplayNameDB,
 		UserName:    loginUserNameInDB,
 		Password:    hashedPassword,

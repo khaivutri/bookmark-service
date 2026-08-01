@@ -11,7 +11,7 @@ var (
 )
 
 func GetTestBase(id string) model.Base {
-	return model. Base{
+	return model.Base{
 		ID:        id,
 		CreatedAt: TestTime,
 		UpdatedAt: TestTime,

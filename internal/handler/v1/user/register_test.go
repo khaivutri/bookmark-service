@@ -13,40 +13,42 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/khaivutri/bookmark-service/internal/model"
 	mockSvc "github.com/khaivutri/bookmark-service/internal/service/user/mocks"
+	"github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 	"github.com/khaivutri/bookmark-service/pkg/validation"
 	"github.com/stretchr/testify/assert"
 )
+
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
- 
+
 	if err := validation.RegisterValidation(); err != nil {
 		panic("failed to register custom validators: " + err.Error())
 	}
- 
+
 	os.Exit(m.Run())
 }
- 
+
 func TestUserHandler_Register(t *testing.T) {
 	t.Parallel()
 
 	// stubUser is a reusable user model returned by the mock service on success.
 	stubUser := &model.User{
-		ID:          "7d80f755-7dce-4c95-b8bf-75bb8e240ef2",
+		Base:        fixture.GetTestBase("7d80f755-7dce-4c95-b8bf-75bb8e240ef2"),
 		UserName:    "johndoe",
 		DisplayName: "John Doe",
 		Email:       "john.doe@example.com",
 	}
 
 	testCases := []struct {
-		name 				string
+		name string
 
-		setupMockSvc     	func(ctx context.Context, t *testing.T) *mockSvc.Service
-		setupTestRequest 	func(ctx *gin.Context)
+		setupMockSvc     func(ctx context.Context, t *testing.T) *mockSvc.Service
+		setupTestRequest func(ctx *gin.Context)
 
-		expectedStatusCode 	int
-		expectedMessage    	string
-		expectedResponse  	string 
+		expectedStatusCode int
+		expectedMessage    string
+		expectedResponse   string
 	}{
 		// ──────────────────────────────────────────────────────────────
 		// Happy path
@@ -54,7 +56,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "201 – registers user successfully",
 
-			setupMockSvc: func(ctx context.Context,t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				svc := mockSvc.NewService(t)
 				svc.On(
 					"CreateUser",
@@ -98,7 +100,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – username too short (< 3 chars)",
 
-			setupMockSvc: func(ctx context.Context ,t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -134,7 +136,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – invalid email format",
 
-			setupMockSvc: func(ctx context.Context ,t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -152,7 +154,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "400 – password missing special character",
 
-			setupMockSvc: func(ctx context.Context ,t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				return mockSvc.NewService(t)
 			},
 
@@ -260,7 +262,7 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "500 – service returns unexpected error",
 
-			setupMockSvc: func(ctx context.Context,t *testing.T) *mockSvc.Service {
+			setupMockSvc: func(ctx context.Context, t *testing.T) *mockSvc.Service {
 				svc := mockSvc.NewService(t)
 				svc.On(
 					"CreateUser",
@@ -313,4 +315,3 @@ func TestUserHandler_Register(t *testing.T) {
 		})
 	}
 }
-
