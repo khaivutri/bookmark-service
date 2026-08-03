@@ -37,36 +37,36 @@ type Engine interface {
 }
 
 type engine struct {
-	app 		*gin.Engine
-	cfg 		*Config
+	app *gin.Engine
+	cfg *Config
 
-	redis 		*redis.Client
-	db 			*gorm.DB
+	redis *redis.Client
+	db    *gorm.DB
 
-	jwtGen    	jwtutils.JWTGenerator
-	jwtVal   	jwtutils.JWTValidator
+	jwtGen jwtutils.JWTGenerator
+	jwtVal jwtutils.JWTValidator
 }
 
 type EngineOpts struct {
-	App 		*gin.Engine
-	Cfg 		*Config
+	App *gin.Engine
+	Cfg *Config
 
-	Redis 		*redis.Client
-	DB 			*gorm.DB
+	Redis *redis.Client
+	DB    *gorm.DB
 
-	JWTGen    	jwtutils.JWTGenerator
-	JWTVal   	jwtutils.JWTValidator
+	JWTGen jwtutils.JWTGenerator
+	JWTVal jwtutils.JWTValidator
 }
 
 // NewEngine initializes and returns a new Engine instance with defined routes and handlers.
-func NewEngine(opts EngineOpts) Engine{
+func NewEngine(opts EngineOpts) Engine {
 	app := &engine{
-		app : 		opts.App,
-		cfg : 		opts.Cfg,
-		redis : 	opts.Redis,
-		db: 		opts.DB,
-		jwtGen: 	opts.JWTGen,
-		jwtVal: 	opts.JWTVal,
+		app:    opts.App,
+		cfg:    opts.Cfg,
+		redis:  opts.Redis,
+		db:     opts.DB,
+		jwtGen: opts.JWTGen,
+		jwtVal: opts.JWTVal,
 	}
 	app.initRoutes()
 	return app
@@ -83,10 +83,10 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type handlers struct {
-	healthCheckHandlers 	handler.HealthCheck
-	linkHandler 			v1.ShortenURL	
-	registerHandler 		userHandler.Handler
-	bookmarkHandler 		bookmark.BookmarkHandler
+	healthCheckHandlers handler.HealthCheck
+	linkHandler         v1.ShortenURL
+	registerHandler     userHandler.Handler
+	bookmarkHandler     bookmark.BookmarkHandler
 }
 
 func (e *engine) initHandlers() *handlers {
@@ -116,18 +116,18 @@ func (e *engine) initHandlers() *handlers {
 	return &handlers{healthCheck, shortenURL, registerHandler, bookmarkHandler}
 }
 
-func (e *engine) initRoutes(){
+func (e *engine) initRoutes() {
 	allHandlers := e.initHandlers()
-	e.app.HandleMethodNotAllowed = true	
-	
+	e.app.HandleMethodNotAllowed = true
+
 	// init middlewares
 	jwtAuth := middleware.NewJWTAuth(e.jwtVal)
-	
+
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", allHandlers.healthCheckHandlers.HealthCheck)
 
-	v1 := e.app.Group("/v1") 
+	v1 := e.app.Group("/v1")
 	{
 		links := v1.Group("/links")
 		{
@@ -142,7 +142,7 @@ func (e *engine) initRoutes(){
 		}
 
 		self := v1.Group("/self")
-		{	
+		{
 			self.Use(jwtAuth.JWTAuth())
 			self.GET("/info", allHandlers.registerHandler.GetSelfInfo)
 			self.PUT("/info", allHandlers.registerHandler.UpdateSelfInfo)
@@ -150,7 +150,8 @@ func (e *engine) initRoutes(){
 		bookmarks := v1.Group("/bookmarks")
 		{
 			bookmarks.Use(jwtAuth.JWTAuth())
-			
+
+			bookmarks.GET("", allHandlers.bookmarkHandler.GetBookmarks)
 			bookmarks.POST("", allHandlers.bookmarkHandler.AddBookmark)
 		}
 	}
