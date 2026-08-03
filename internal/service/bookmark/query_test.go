@@ -57,7 +57,7 @@ func TestBookmarkService_GetBookmarks(t *testing.T) {
 	}
 }
 
-func assertGetBookmarksResult(t *testing.T, tc getBookmarksTestCase, got *getBookmarkResponse, err error) {
+func assertGetBookmarksResult(t *testing.T, tc getBookmarksTestCase, got *GetBookmarkResponse, err error) {
 	t.Helper()
 
 	if tc.repositoryErr != nil {
@@ -67,5 +67,5 @@ func assertGetBookmarksResult(t *testing.T, tc getBookmarksTestCase, got *getBoo
 	}
 
 	require.NoError(t, err)
-	require.Equal(t, &getBookmarkResponse{Bookmarks: tc.bookmarks, Total: tc.total}, got)
+	require.Equal(t, &GetBookmarkResponse{Bookmarks: tc.bookmarks, Total: tc.total}, got)
 }
