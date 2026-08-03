@@ -16,13 +16,17 @@ type BookmarkService interface {
 }
 
 type bookmarkService struct {
-	repo 		bookmark.BookmarkRepository
-	codeGen 	utils.GenCode
+	repo    bookmark.BookmarkRepository
+	codeGen utils.GenCode
 }
 
-func NewBookmarkService(repo bookmark.BookmarkRepository, codeGen utils.GenCode) BookmarkService{
+func NewBookmarkService(repo bookmark.BookmarkRepository, codeGen utils.GenCode) BookmarkService {
 	return &bookmarkService{
-		repo: 		repo,
-		codeGen: 	codeGen,
+		repo:    repo,
+		codeGen: codeGen,
 	}
 }
+
+// GetBookmarkResponse is exported so generated service mocks can implement
+// BookmarkService from another package.
+type GetBookmarkResponse = getBookmarkResponse
