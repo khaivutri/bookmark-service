@@ -182,7 +182,28 @@ docker rm -f redis
 
 ---
 
-## 5. Run the application locally
+## 5. Database Migration
+
+This service uses SQL-based database migrations stored in the `migrations/` directory. The application automatically applies them when the service starts and connects to PostgreSQL.
+
+### Migration Files
+
+- `migrations/0001_create_user.up.sql` / `migrations/0001_create_user.down.sql`
+  - Creates the `users` table with username and email uniqueness constraints.
+- `migrations/0002_create_bookmark.up.sql` / `migrations/0002_create_bookmark.down.sql`
+  - Creates the `bookmarks` table and links bookmarks to users through a foreign key.
+
+### What happens on startup
+
+When the app boots, it initializes the database client and runs the migration flow in the `up` mode, so the schema is created automatically before the API starts serving requests.
+
+### Manual migration notes
+
+If you need to inspect or apply schema changes manually, the migration SQL files are ready to use. The migration flow is implemented in the application startup path and uses the `golang-migrate` package under the hood.
+
+---
+
+## 6. Run the application locally
 
 ```bash
 make run
@@ -401,11 +422,214 @@ Content-Type: application/json
 
 ---
 
+## Bookmark Management
+
+All bookmark endpoints require a valid Bearer JWT token. They are grouped under `/v1/bookmarks` and are intended for managing personal bookmarks belonging to the authenticated user.
+
+### Common Authentication
+
+```http
+Authorization: Bearer <your-jwt-token>
+```
+
+### Endpoint Summary
+
+| Method | Endpoint                         | Description                                                   | Success Response |
+| ------ | -------------------------------- | ------------------------------------------------------------- | ---------------- |
+| POST   | `/v1/bookmarks`                  | Create a new bookmark for the authenticated user              | `200 OK`         |
+| GET    | `/v1/bookmarks`                  | Retrieve bookmarks for the authenticated user with pagination | `200 OK`         |
+| PUT    | `/v1/bookmarks?id=<bookmark-id>` | Update an existing bookmark                                   | `200 OK`         |
+| DELETE | `/v1/bookmarks?id=<bookmark-id>` | Delete an existing bookmark                                   | `200 OK`         |
+
+### 1. Create Bookmark
+
+| Method | Endpoint        | Description                                   |
+| ------ | --------------- | --------------------------------------------- |
+| POST   | `/v1/bookmarks` | Creates a bookmark with a description and URL |
+
+#### Request Body
+
+| Field         | Type   | Required | Validation                               | Description                  |
+| ------------- | ------ | -------- | ---------------------------------------- | ---------------------------- |
+| `description` | string | No       | Max 255 characters                       | Short label for the bookmark |
+| `url`         | string | Yes      | Required, valid URL, max 2048 characters | Target URL to save           |
+
+#### Example Request
+
+```http
+POST /v1/bookmarks HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "description": "Google",
+  "url": "https://www.google.com"
+}
+```
+
+#### Example Success Response
+
+```json
+{
+  "id": "b649b57b-b7b6-44e4-a233-74147ecf56ee",
+  "description": "Google",
+  "url": "https://www.google.com",
+  "code": "a1b2c3d4e5",
+  "user_id": "7d80f755-7dce-4c95-b8bf-75bb8e240ef2",
+  "created_at": "2026-07-22T11:00:00Z",
+  "updated_at": "2026-07-22T11:00:00Z"
+}
+```
+
+#### Common Error Responses
+
+```json
+{
+  "message": "Invalid input"
+}
+```
+
+```json
+{
+  "message": "bookmark code invalid"
+}
+```
+
+---
+
+### 2. Get Bookmarks
+
+| Method | Endpoint        | Description                                   |
+| ------ | --------------- | --------------------------------------------- |
+| GET    | `/v1/bookmarks` | Retrieves bookmarks of the authenticated user |
+
+#### Query Parameters
+
+| Parameter | Type    | Required | Validation  | Description                  |
+| --------- | ------- | -------- | ----------- | ---------------------------- |
+| `page`    | integer | No       | Minimum `1` | Page number to retrieve      |
+| `limit`   | integer | No       | Minimum `1` | Number of bookmarks per page |
+
+#### Example Request
+
+```http
+GET /v1/bookmarks?page=1&limit=10 HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer <your-jwt-token>
+```
+
+#### Example Success Response
+
+```json
+{
+  "data": [
+    {
+      "id": "b649b57b-b7b6-44e4-a233-74147ecf56ee",
+      "description": "Google",
+      "url": "https://www.google.com",
+      "code": "a1b2c3d4e5",
+      "user_id": "7d80f755-7dce-4c95-b8bf-75bb8e240ef2",
+      "created_at": "2026-07-22T11:00:00Z",
+      "updated_at": "2026-07-22T11:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 1
+  }
+}
+```
+
+---
+
+### 3. Update Bookmark
+
+| Method | Endpoint                         | Description                  |
+| ------ | -------------------------------- | ---------------------------- |
+| PUT    | `/v1/bookmarks?id=<bookmark-id>` | Updates an existing bookmark |
+
+#### Request Query Parameters
+
+| Parameter | Type   | Required | Description           |
+| --------- | ------ | -------- | --------------------- |
+| `id`      | string | Yes      | Bookmark ID to update |
+
+#### Request Body
+
+| Field         | Type   | Required | Validation                               | Description            |
+| ------------- | ------ | -------- | ---------------------------------------- | ---------------------- |
+| `description` | string | No       | Max 255 characters                       | Updated bookmark label |
+| `url`         | string | Yes      | Required, valid URL, max 2048 characters | Updated target URL     |
+
+#### Example Request
+
+```http
+PUT /v1/bookmarks?id=b649b57b-b7b6-44e4-a233-74147ecf56ee HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "description": "Updated Google",
+  "url": "https://developers.google.com"
+}
+```
+
+#### Example Success Response
+
+```json
+{
+  "message": "Success"
+}
+```
+
+---
+
+### 4. Delete Bookmark
+
+| Method | Endpoint                         | Description                  |
+| ------ | -------------------------------- | ---------------------------- |
+| DELETE | `/v1/bookmarks?id=<bookmark-id>` | Deletes an existing bookmark |
+
+#### Request Query Parameters
+
+| Parameter | Type   | Required | Description           |
+| --------- | ------ | -------- | --------------------- |
+| `id`      | string | Yes      | Bookmark ID to delete |
+
+#### Example Request
+
+```http
+DELETE /v1/bookmarks?id=b649b57b-b7b6-44e4-a233-74147ecf56ee HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer <your-jwt-token>
+```
+
+#### Example Success Response
+
+```json
+{
+  "message": "Success"
+}
+```
+
+#### Common Error Responses
+
+```json
+{
+  "message": "Bookmark not found"
+}
+```
+
+---
+
 ## Get Current User Info
 
-| Method | Endpoint        | Description                                               | Security   | Success Response |
-| ------ | --------------- | --------------------------------------------------------- | ---------- | ---------------- |
-| GET    | `/v1/self/info` | Retrieves profile details of the authenticated requestor  | Bearer JWT | `200 OK`         |
+| Method | Endpoint        | Description                                              | Security   | Success Response |
+| ------ | --------------- | -------------------------------------------------------- | ---------- | ---------------- |
+| GET    | `/v1/self/info` | Retrieves profile details of the authenticated requestor | Bearer JWT | `200 OK`         |
 
 ### Example Request
 
@@ -440,8 +664,8 @@ Authorization: Bearer <your-jwt-token>
 
 ## Update Current User Info
 
-| Method | Endpoint        | Description                                                    | Security   | Success Response |
-| ------ | --------------- | -------------------------------------------------------------- | ---------- | ---------------- |
+| Method | Endpoint        | Description                                                   | Security   | Success Response |
+| ------ | --------------- | ------------------------------------------------------------- | ---------- | ---------------- |
 | PUT    | `/v1/self/info` | Updates Display Name and Email of the authenticated requestor | Bearer JWT | `200 OK`         |
 
 ### Example Request
