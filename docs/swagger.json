@@ -96,6 +96,68 @@
                     }
                 }
             },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the description and/or URL of an existing bookmark belonging to the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "Update bookmark",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bookmark ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Update bookmark request payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmark updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.UpdateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -501,6 +563,37 @@
                 "total": {
                     "type": "integer",
                     "example": 100
+                }
+            }
+        },
+        "bookmark.UpdateRequest": {
+            "type": "object",
+            "required": [
+                "id",
+                "url"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Google"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "example": "https://www.google.com"
+                }
+            }
+        },
+        "bookmark.UpdateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Success"
                 }
             }
         },

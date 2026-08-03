@@ -34,6 +34,28 @@ definitions:
         example: 100
         type: integer
     type: object
+  bookmark.UpdateRequest:
+    properties:
+      description:
+        example: Google
+        maxLength: 255
+        type: string
+      id:
+        type: string
+      url:
+        example: https://www.google.com
+        maxLength: 2048
+        type: string
+    required:
+    - id
+    - url
+    type: object
+  bookmark.UpdateResponse:
+    properties:
+      message:
+        example: Success
+        type: string
+    type: object
   dto.ShortenURLReq:
     properties:
       exp:
@@ -310,6 +332,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Add Bookmark
+      tags:
+      - Bookmarks
+    put:
+      consumes:
+      - application/json
+      description: Updates the description and/or URL of an existing bookmark belonging
+        to the authenticated user.
+      parameters:
+      - description: Bookmark ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Update bookmark request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/bookmark.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookmark updated successfully
+          schema:
+            $ref: '#/definitions/bookmark.UpdateResponse'
+        "400":
+          description: Bad Request / Invalid input
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      security:
+      - BearerAuth: []
+      summary: Update bookmark
       tags:
       - Bookmarks
   /v1/links/redirect/{code}:
