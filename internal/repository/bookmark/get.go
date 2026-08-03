@@ -12,6 +12,7 @@ var (
 	ErrGetBookMarks 	= errors.New("failed to get bookmarks")
 )
 
+// GetBookmarks retrieves a list of bookmarks with limit and offset, along with the total count.
 func (b *bookmarkRepo) GetBookmarks(ctx context.Context, userID string, limit, offset int) ([]*model.Bookmark, int64, error) {
 	bookmarks, err := b.getBookmarks(ctx, userID, "created_at ASC", limit, offset)
 	if err != nil {

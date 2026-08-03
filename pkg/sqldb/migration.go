@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// MigrateSQLDB runs schema migrations on the given GORM database connection.
 func MigrateSQLDB(db *gorm.DB, migrationPath, mode string, steps int) error {
 	sqldb, err := db.DB()
 	if err != nil {

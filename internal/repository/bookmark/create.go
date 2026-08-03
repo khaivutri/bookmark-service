@@ -7,6 +7,7 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 )
 
+// CreateBookmark inserts a new bookmark record into the database.
 func (r *bookmarkRepo) CreateBookmark(ctx context.Context, newBookmark *model.Bookmark) (*model.Bookmark, error) {
 	err := r.db.WithContext(ctx).Create(newBookmark).Error
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 )
 
+// DeleteBookmarkByID deletes a bookmark record by its unique ID.
 func (b *bookmarkRepo) DeleteBookmarkByID(ctx context.Context, id string) error {
 	res := b.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Bookmark{})
 	if res.Error != nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 )
 
+// UpdateBookmark saves changes to an existing bookmark record.
 func (r *bookmarkRepo) UpdateBookmark(ctx context.Context, bookmark *model.Bookmark) (error) {
 	err := r.db.WithContext(ctx).Save(bookmark).Error
 	if err != nil {

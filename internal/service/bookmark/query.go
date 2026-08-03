@@ -11,6 +11,7 @@ type GetBookmarkResponse struct {
 	Total		int64				`json:"total"`	
 }
 
+// GetBookmarks retrieves a paginated list of bookmarks for a specific user.
 func (s *bookmarkService) GetBookmarks(ctx context.Context, userID string, page, limit int) (*GetBookmarkResponse, error) {
 	offset := (page -1 )*limit
 

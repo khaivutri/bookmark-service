@@ -7,6 +7,7 @@ import (
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 )
 
+// AddBookmark generates a unique code, constructs a new bookmark, and persists it.
 func (s *bookmarkService) AddBookmark(ctx context.Context, description, url, userID string) (*model.Bookmark, error) {
 	//create a new bookmark model
 	code, errGen := s.codeGen.Generate(10)
