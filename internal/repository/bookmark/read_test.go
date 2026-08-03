@@ -11,23 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	existingBookmark1 = &model.Bookmark{
-		Base:        	fixture.GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ee"),
-		Description: 	"description1",
-		URL: 			"https://example.com",
-		Code:		 	"code1",
-		UserID: 		"b649b57b-b7b6-44e4-a233-74147ecf56ee",
-	}
-	existingBookmark2 = &model.Bookmark{
-		Base: 			fixture.GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ef"),
-		Description: 	"description2",
-		URL: 			"https://example.com",
-		Code: 			"code2",
-		UserID: 		"b649b57b-b7b6-44e4-a233-74147ecf56ee",
-	}
-)
-
 func newTestRepository(t *testing.T) (*bookmarkRepo, *gorm.DB) {
 	t.Helper()
 
@@ -35,7 +18,6 @@ func newTestRepository(t *testing.T) (*bookmarkRepo, *gorm.DB) {
 
 	return &bookmarkRepo{db: db}, db
 }
-
 
 func assertBookmarkEqual(t *testing.T, want, got *model.Bookmark) {
 	t.Helper()
@@ -57,19 +39,22 @@ func assertBookmarkEqual(t *testing.T, want, got *model.Bookmark) {
 		t.Errorf("Code mismatch: want %q, got %q", want.Code, got.Code)
 	}
 	if got.UserID != want.UserID {
-		t.Errorf("User ID mismatch: want %q, got %q", want.Code, got.Code)
+		t.Errorf("User ID mismatch: want %q, got %q", want.UserID, got.UserID)
 	}
 }
 
 type bookmarkLookupCase struct {
-	name 				string 
-	code 				string 
-
-	expectedBookmark 	*model.Bookmark
-	expectedErr      	error
+	name             string
+	value            string
+	expectedBookmark *model.Bookmark
+	expectedErr      error
 }
 
-func testBookmarkLookup(t *testing.T, lookup func(*bookmarkRepo, context.Context, string) (*model.Bookmark, error), cases []bookmarkLookupCase) {
+func testBookmarkLookup(
+	t *testing.T,
+	lookup func(*bookmarkRepo, context.Context, string) (*model.Bookmark, error),
+	cases []bookmarkLookupCase,
+) {
 	t.Helper()
 
 	for _, tc := range cases {
@@ -77,7 +62,7 @@ func testBookmarkLookup(t *testing.T, lookup func(*bookmarkRepo, context.Context
 			t.Parallel()
 
 			repo, _ := newTestRepository(t)
-			got, err := lookup(repo, t.Context(), tc.code)
+			got, err := lookup(repo, t.Context(), tc.value)
 
 			if tc.expectedErr != nil {
 				assert.ErrorIs(t, err, tc.expectedErr)
@@ -98,29 +83,53 @@ func TestBookmarkRepo_GetBookmarkByCode(t *testing.T) {
 		return repo.GetBookmarkByCode(ctx, code)
 	}, []bookmarkLookupCase{
 		{
-			name:         		"existing bookmark - returns bookmark successfully",
-			code:         		"code1",
-			expectedBookmark: 	existingBookmark1,
-			expectedErr:  		nil,
+			name:             "existing bookmark - returns bookmark successfully",
+			value:            "code1",
+			expectedBookmark: existingBookmark1,
 		},
 		{
-			name:         		"another existing bookmark - returns bookmark successfully",
-			code:        		"code2",
-			expectedBookmark: 	existingBookmark2,
-			expectedErr:  		nil,
+			name:             "another existing bookmark - returns bookmark successfully",
+			value:            "code2",
+			expectedBookmark: existingBookmark2,
 		},
 		{
-			name:         		"bookmark not found - returns parsed not found error",
-			code:        		"non_existent_user",
-			expectedBookmark: 	nil,
-			expectedErr:  		dbutils.ErrRecordNotFound,
+			name:        "bookmark not found - returns parsed not found error",
+			value:       "non_existent_user",
+			expectedErr: dbutils.ErrRecordNotFound,
 		},
 		{
-			name:         		"empty bookmark code - returns not found error",
-			code:       		"",
-			expectedBookmark: 	nil,
-			expectedErr:  		dbutils.ErrRecordNotFound,
+			name:        "empty bookmark code - returns not found error",
+			value:       "",
+			expectedErr: dbutils.ErrRecordNotFound,
 		},
 	})
 }
 
+func TestBookmarkRepo_GetBookmarkByID(t *testing.T) {
+	t.Parallel()
+
+	testBookmarkLookup(t, func(repo *bookmarkRepo, ctx context.Context, id string) (*model.Bookmark, error) {
+		return repo.GetBookmarkByID(ctx, id)
+	}, []bookmarkLookupCase{
+		{
+			name:             "existing bookmark - returns bookmark successfully",
+			value:            existingBookmark1.ID,
+			expectedBookmark: existingBookmark1,
+		},
+		{
+			name:             "another existing bookmark - returns bookmark successfully",
+			value:            existingBookmark2.ID,
+			expectedBookmark: existingBookmark2,
+		},
+		{
+			name:        "bookmark not found - returns parsed not found error",
+			value:       "non-existent-bookmark-id",
+			expectedErr: dbutils.ErrRecordNotFound,
+		},
+		{
+			name:        "empty bookmark ID - returns not found error",
+			value:       "",
+			expectedErr: dbutils.ErrRecordNotFound,
+		},
+	})
+}

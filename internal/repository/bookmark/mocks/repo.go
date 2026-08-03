@@ -74,6 +74,36 @@ func (_m *BookmarkRepository) GetBookmarkByCode(ctx context.Context, code string
 	return r0, r1
 }
 
+// GetBookmarkByID provides a mock function with given fields: ctx, id
+func (_m *BookmarkRepository) GetBookmarkByID(ctx context.Context, id string) (*model.Bookmark, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBookmarkByID")
+	}
+
+	var r0 *model.Bookmark
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.Bookmark, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.Bookmark); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Bookmark)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBookmarks provides a mock function with given fields: ctx, userID, limit, offset
 func (_m *BookmarkRepository) GetBookmarks(ctx context.Context, userID string, limit int, offset int) ([]*model.Bookmark, int64, error) {
 	ret := _m.Called(ctx, userID, limit, offset)
@@ -109,6 +139,24 @@ func (_m *BookmarkRepository) GetBookmarks(ctx context.Context, userID string, l
 	}
 
 	return r0, r1, r2
+}
+
+// UpdateBookmark provides a mock function with given fields: ctx, _a1
+func (_m *BookmarkRepository) UpdateBookmark(ctx context.Context, _a1 *model.Bookmark) error {
+	ret := _m.Called(ctx, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateBookmark")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Bookmark) error); ok {
+		r0 = rf(ctx, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewBookmarkRepository creates a new instance of BookmarkRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
