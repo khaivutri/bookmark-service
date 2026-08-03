@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS bookmark
+CREATE TABLE IF NOT EXISTS bookmarks
 (
     id              varchar(36)         NOT NULL,
     user_id         varchar(36)         NOT NULL,
