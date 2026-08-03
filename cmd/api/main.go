@@ -6,7 +6,7 @@ import (
 
 //	@title Bookmark Service API
 //	@version 2.0
-//	@description This is a simple REST API for a bookmark service - Demo MLIoT Lab.
+//	@description This is a simple REST API for a bookmark service
 //	@BasePath /
 //	@securityDefinitions.apikey BearerAuth
 //	@in header

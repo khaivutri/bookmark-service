@@ -14,7 +14,9 @@ type BookmarkService interface {
 
 	GetBookmarks(ctx context.Context, userID string, page, limit int) (*GetBookmarkResponse, error)
 
-	UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error 
+	UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error
+	
+	DeleteBookmark(ctx context.Context, bookmarkID string) error
 }
 
 type bookmarkService struct {

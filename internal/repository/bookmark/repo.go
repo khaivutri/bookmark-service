@@ -15,6 +15,8 @@ type BookmarkRepository interface {
 	GetBookmarkByCode(ctx context.Context, code string) (*model.Bookmark, error)
 	
 	UpdateBookmark(ctx context.Context, bookmark *model.Bookmark) (error)
+
+	DeleteBookmarkByID(ctx context.Context, id string) error
 }
 
 type bookmarkRepo struct {
