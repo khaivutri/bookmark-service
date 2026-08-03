@@ -6,7 +6,8 @@ import (
 )
 type BookmarkHandler interface {
 	AddBookmark(ctx *gin.Context)
-	GetBookmarks(ctx *gin.Context) 
+	GetBookmarks(ctx *gin.Context)
+	UpdateBookmark(ctx *gin.Context) 
 }
 
 type bookmarkHandler struct {

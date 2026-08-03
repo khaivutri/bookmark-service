@@ -153,6 +153,7 @@ func (e *engine) initRoutes() {
 
 			bookmarks.GET("", allHandlers.bookmarkHandler.GetBookmarks)
 			bookmarks.POST("", allHandlers.bookmarkHandler.AddBookmark)
+			bookmarks.PUT("", allHandlers.bookmarkHandler.UpdateBookmark)
 		}
 	}
 }

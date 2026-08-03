@@ -12,7 +12,9 @@ import (
 type BookmarkService interface {
 	AddBookmark(ctx context.Context, descriptio, url, userID string) (*model.Bookmark, error)
 
-	GetBookmarks(ctx context.Context, userID string, page, limit int) (*getBookmarkResponse, error)
+	GetBookmarks(ctx context.Context, userID string, page, limit int) (*GetBookmarkResponse, error)
+
+	UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error 
 }
 
 type bookmarkService struct {
@@ -26,7 +28,3 @@ func NewBookmarkService(repo bookmark.BookmarkRepository, codeGen utils.GenCode)
 		codeGen: codeGen,
 	}
 }
-
-// GetBookmarkResponse is exported so generated service mocks can implement
-// BookmarkService from another package.
-type GetBookmarkResponse = getBookmarkResponse

@@ -11,7 +11,10 @@ type BookmarkRepository interface {
 	CreateBookmark(ctx context.Context, newBookmark *model.Bookmark) (*model.Bookmark, error)
 
 	GetBookmarks(ctx context.Context, userID string, limit, offset int) ([]*model.Bookmark, int64, error)
+	GetBookmarkByID(ctx context.Context, id string) (*model.Bookmark, error)
 	GetBookmarkByCode(ctx context.Context, code string) (*model.Bookmark, error)
+	
+	UpdateBookmark(ctx context.Context, bookmark *model.Bookmark) (error)
 }
 
 type bookmarkRepo struct {

@@ -15,3 +15,12 @@ func (b *bookmarkRepo) GetBookmarkByCode(ctx context.Context, code string) (*mod
 	}
 	return bookmark, nil
 }
+
+func (b *bookmarkRepo) GetBookmarkByID(ctx context.Context, id string) (*model.Bookmark, error) {
+	bookmark := &model.Bookmark{}
+	err := b.db.WithContext(ctx).Where("id = ?", id).First(bookmark).Error
+	if err != nil {
+		return nil, dbutils.ErrRecordNotFound
+	}
+	return bookmark, nil
+}
