@@ -225,6 +225,62 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a bookmark belonging to the authenticated user by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "Delete bookmark",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bookmark ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmark deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.DeleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Bookmark not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    }
+                }
             }
         },
         "/v1/links/redirect/{code}": {
@@ -536,6 +592,15 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 2048,
                     "example": "https://www.google.com"
+                }
+            }
+        },
+        "bookmark.DeleteResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Success"
                 }
             }
         },
@@ -867,7 +932,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Bookmark Service API",
-	Description:      "This is a simple REST API for a bookmark service - Demo MLIoT Lab.",
+	Description:      "This is a simple REST API for a bookmark service",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
