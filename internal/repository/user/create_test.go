@@ -31,7 +31,7 @@ func TestSqlRepository_CreateUser(t *testing.T) {
 			expectedError: nil,
 			verifyFunc: func(db *gorm.DB, userName, email string) {
 				user := model.User{}
-				err := db.First(&user, "user_name = ?", userName).Error
+				err := db.First(&user, "username = ?", userName).Error
 
 				assert.NoError(t, err)
 				assert.Equal(t, userName, user.UserName)

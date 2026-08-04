@@ -13,6 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/khaivutri/bookmark-service/internal/model"
 	mockSvc "github.com/khaivutri/bookmark-service/internal/service/user/mocks"
+	"github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +27,7 @@ func TestHandler_GetSelfInfo(t *testing.T) {
 	t.Parallel()
 
 	stubUser := &model.User{
-		ID:          fakeUserID,
+		Base:        fixture.GetTestBase(fakeUserID),
 		UserName:    "johndoe",
 		DisplayName: "John Doe",
 		Email:       "john.doe@example.com",
@@ -51,7 +52,7 @@ func TestHandler_GetSelfInfo(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/v1/self/info", nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"id":"7d80f755-7dce-4c95-b8bf-75bb8e240ef2","display_name":"John Doe","username":"johndoe","email":"john.doe@example.com","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`,
+			expectedBody:   `{"id":"7d80f755-7dce-4c95-b8bf-75bb8e240ef2","display_name":"John Doe","username":"johndoe","email":"john.doe@example.com","created_at":"2023-01-01T00:00:00Z","updated_at":"2023-01-01T00:00:00Z"}`,
 		},
 		{
 			name: "500 - service returns unexpected error",

@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/khaivutri/bookmark-service/internal/model"
 	mockRepo "github.com/khaivutri/bookmark-service/internal/repository/user/mocks"
+	"github.com/khaivutri/bookmark-service/internal/test/data/fixture"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 	mockJWT "github.com/khaivutri/bookmark-service/pkg/jwtutils/mocks"
 	mockHasher "github.com/khaivutri/bookmark-service/pkg/utils/mocks"
@@ -20,7 +21,7 @@ func TestLogin(t *testing.T) {
 	t.Parallel()
 
 	stubUser := &model.User{
-		ID:       "69c11072-9af6-4a5f-81d5-239d96154d5e",
+		Base:     fixture.GetTestBase("69c11072-9af6-4a5f-81d5-239d96154d5e"),
 		UserName: "johndoe",
 		Password: "hashed-password",
 		Email:    "john.doe@example.com",
@@ -54,7 +55,7 @@ func TestLogin(t *testing.T) {
 					}
 
 					now := time.Now().Unix()
-					return claims["sub"] == stubUser.ID &&
+					return claims["sub"] == stubUser.Base.ID &&
 						claims["email"] == stubUser.Email &&
 						issuedAt >= now-5 &&
 						issuedAt <= now+5 &&
@@ -99,7 +100,7 @@ func TestLogin(t *testing.T) {
 				repo.On("GetUserByUserName", ctx, "johndoe").Return(stubUser, nil).Once()
 				hasher.On("Compare", "hashed-password", "Password123@").Return(true).Once()
 				generator.On("GenerateJWT", mock.MatchedBy(func(claims jwt.MapClaims) bool {
-					return claims["sub"] == stubUser.ID && claims["email"] == stubUser.Email
+					return claims["sub"] == stubUser.Base.ID && claims["email"] == stubUser.Email
 				})).Return("", jwtErr).Once()
 			},
 

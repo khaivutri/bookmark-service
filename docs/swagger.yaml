@@ -1,5 +1,67 @@
 basePath: /
 definitions:
+  bookmark.BookmarkRequest:
+    properties:
+      description:
+        type: string
+      url:
+        example: https://www.google.com
+        maxLength: 2048
+        type: string
+    required:
+    - url
+    type: object
+  bookmark.DeleteResponse:
+    properties:
+      message:
+        example: Success
+        type: string
+    type: object
+  bookmark.GetBookmarksResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Bookmark'
+        type: array
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/bookmark.Pagination'
+    type: object
+  bookmark.Pagination:
+    properties:
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  bookmark.UpdateRequest:
+    properties:
+      description:
+        example: Google
+        maxLength: 255
+        type: string
+      id:
+        type: string
+      url:
+        example: https://www.google.com
+        maxLength: 2048
+        type: string
+    required:
+    - id
+    - url
+    type: object
+  bookmark.UpdateResponse:
+    properties:
+      message:
+        example: Success
+        type: string
+    type: object
   dto.ShortenURLReq:
     properties:
       exp:
@@ -23,6 +85,23 @@ definitions:
       message:
         description: Message provides a status message for the operation.
         example: Shorten URL generated successfully!
+        type: string
+    type: object
+  model.Bookmark:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+      user_id:
         type: string
     type: object
   model.HealthReport:
@@ -158,7 +237,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is a simple REST API for a bookmark service - Demo MLIoT Lab.
+  description: This is a simple REST API for a bookmark service
   title: Bookmark Service API
   version: "2.0"
 paths:
@@ -180,6 +259,164 @@ paths:
       summary: Health Check
       tags:
       - Health Check
+  /v1/bookmarks:
+    delete:
+      description: Deletes a bookmark belonging to the authenticated user by its ID.
+      parameters:
+      - description: Bookmark ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookmark deleted successfully
+          schema:
+            $ref: '#/definitions/bookmark.DeleteResponse'
+        "400":
+          description: Bad Request / Invalid input
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "404":
+          description: Bookmark not found
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      security:
+      - BearerAuth: []
+      summary: Delete bookmark
+      tags:
+      - Bookmarks
+    get:
+      description: Retrieves all bookmarks belonging to the authenticated user with
+        pagination.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookmarks retrieved successfully
+          schema:
+            $ref: '#/definitions/bookmark.GetBookmarksResponse'
+        "400":
+          description: Bad Request / Invalid input
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      security:
+      - BearerAuth: []
+      summary: Get user bookmarks
+      tags:
+      - Bookmarks
+    post:
+      consumes:
+      - application/json
+      description: Creates a new bookmark for the authenticated user with the provided
+        description and URL.
+      parameters:
+      - description: Bookmark request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/bookmark.BookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookmark created successfully
+          schema:
+            $ref: '#/definitions/model.Bookmark'
+        "400":
+          description: Bad Request / Invalid input
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "409":
+          description: Conflict / Duplicate bookmark code
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      security:
+      - BearerAuth: []
+      summary: Add Bookmark
+      tags:
+      - Bookmarks
+    put:
+      consumes:
+      - application/json
+      description: Updates the description and/or URL of an existing bookmark belonging
+        to the authenticated user.
+      parameters:
+      - description: Bookmark ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Update bookmark request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/bookmark.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookmark updated successfully
+          schema:
+            $ref: '#/definitions/bookmark.UpdateResponse'
+        "400":
+          description: Bad Request / Invalid input
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrMessage'
+      security:
+      - BearerAuth: []
+      summary: Update bookmark
+      tags:
+      - Bookmarks
   /v1/links/redirect/{code}:
     get:
       description: Resolves a short code and redirects the client to the original

@@ -43,6 +43,246 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/bookmarks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all bookmarks belonging to the authenticated user with pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "Get user bookmarks",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmarks retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.GetBookmarksResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the description and/or URL of an existing bookmark belonging to the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "Update bookmark",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bookmark ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Update bookmark request payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmark updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.UpdateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new bookmark for the authenticated user with the provided description and URL.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "Add Bookmark",
+                "parameters": [
+                    {
+                        "description": "Bookmark request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.BookmarkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmark created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.Bookmark"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict / Duplicate bookmark code",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a bookmark belonging to the authenticated user by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookmarks"
+                ],
+                "summary": "Delete bookmark",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bookmark ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmark deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/bookmark.DeleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Bookmark not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrMessage"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/links/redirect/{code}": {
             "get": {
                 "description": "Resolves a short code and redirects the client to the original URL.",
@@ -339,6 +579,96 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "bookmark.BookmarkRequest": {
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "example": "https://www.google.com"
+                }
+            }
+        },
+        "bookmark.DeleteResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Success"
+                }
+            }
+        },
+        "bookmark.GetBookmarksResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Bookmark"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/bookmark.Pagination"
+                }
+            }
+        },
+        "bookmark.Pagination": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "bookmark.UpdateRequest": {
+            "type": "object",
+            "required": [
+                "id",
+                "url"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Google"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "example": "https://www.google.com"
+                }
+            }
+        },
+        "bookmark.UpdateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Success"
+                }
+            }
+        },
         "dto.ShortenURLReq": {
             "type": "object",
             "required": [
@@ -370,6 +700,32 @@ const docTemplate = `{
                     "description": "Message provides a status message for the operation.",
                     "type": "string",
                     "example": "Shorten URL generated successfully!"
+                }
+            }
+        },
+        "model.Bookmark": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -576,7 +932,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Bookmark Service API",
-	Description:      "This is a simple REST API for a bookmark service - Demo MLIoT Lab.",
+	Description:      "This is a simple REST API for a bookmark service",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

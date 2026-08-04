@@ -1,0 +1,28 @@
+package bookmark
+
+import (
+	"context"
+
+	"github.com/khaivutri/bookmark-service/internal/model"
+	"github.com/khaivutri/bookmark-service/pkg/dbutils"
+)
+
+// GetBookmarkByCode queries a bookmark by its unique short code.
+func (b *bookmarkRepo) GetBookmarkByCode(ctx context.Context, code string) (*model.Bookmark, error) {
+	bookmark := &model.Bookmark{}
+	err := b.db.WithContext(ctx).Where("code = ?", code).First(bookmark).Error
+	if err != nil {
+		return nil, dbutils.ErrRecordNotFound
+	}
+	return bookmark, nil
+}
+
+// GetBookmarkByID queries a bookmark by its unique ID.
+func (b *bookmarkRepo) GetBookmarkByID(ctx context.Context, id string) (*model.Bookmark, error) {
+	bookmark := &model.Bookmark{}
+	err := b.db.WithContext(ctx).Where("id = ?", id).First(bookmark).Error
+	if err != nil {
+		return nil, dbutils.ErrRecordNotFound
+	}
+	return bookmark, nil
+}

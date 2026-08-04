@@ -13,7 +13,7 @@ func (u *UserCommonTest) Migrate() error {
 	return u.db.AutoMigrate(&model.User{})
 }
 
-func (u *UserCommonTest) GenerateData() error { 
+func (u *UserCommonTest) GenerateData() error {
 	// skip BeforeCreate
 	db := u.db.Session(&gorm.Session{
 		SkipHooks: true,
@@ -21,20 +21,20 @@ func (u *UserCommonTest) GenerateData() error {
 
 	users := []*model.User{
 		{
-			ID: "b649b57b-b7b6-44e4-a233-74147ecf56ee",
+			Base:        GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ee"),
 			DisplayName: "Test1",
-			UserName: "test1",
-			Password: "pwd123",
-			Email: "test1@example.com",
+			UserName:    "test1",
+			Password:    "pwd123",
+			Email:       "test1@example.com",
 		},
 		{
-			ID: "b649b57b-b7b6-44e4-a233-74147ecf56ef",
+			Base:        GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ef"),
 			DisplayName: "Test2",
-			UserName: "test2",
-			Password: "pwd123",
-			Email: "test2@example.com",
+			UserName:    "test2",
+			Password:    "pwd123",
+			Email:       "test2@example.com",
 		},
 	}
 
 	return db.CreateInBatches(users, 10).Error
- }
+}

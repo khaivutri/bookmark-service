@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   redis:
     image: redis:alpine
@@ -19,7 +17,7 @@ services:
       - REDIS_ADDRESS=redis:6379
 
   postgres:
-    image: postgres:alpine
+    image: postgres:16-alpine
     container_name: postgres
     ports:
       - "5432:5432"
@@ -27,3 +25,8 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=bookmark
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:

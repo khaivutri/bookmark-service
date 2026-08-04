@@ -16,14 +16,14 @@ import (
 
 var (
 	existingUser1 = &model.User{
-		ID:          "b649b57b-b7b6-44e4-a233-74147ecf56ee",
+		Base:        fixture.GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ee"),
 		DisplayName: "Test1",
 		UserName:    "test1",
 		Password:    "pwd123",
 		Email:       "test1@example.com",
 	}
 	existingUser2 = &model.User{
-		ID:          "b649b57b-b7b6-44e4-a233-74147ecf56ef",
+		Base:        fixture.GetTestBase("b649b57b-b7b6-44e4-a233-74147ecf56ef"),
 		DisplayName: "Test2",
 		UserName:    "test2",
 		Password:    "pwd123",
@@ -163,7 +163,7 @@ func TestSqlRepository_UpdateUser(t *testing.T) {
 		{
 			name: "update existing user successfully",
 			inputUser: &model.User{
-				ID:          existingUser1.ID,
+				Base:        fixture.GetTestBase(existingUser1.ID),
 				DisplayName: "Test1 Updated",
 				UserName:    existingUser1.UserName,
 				Password:    existingUser1.Password,
@@ -174,7 +174,7 @@ func TestSqlRepository_UpdateUser(t *testing.T) {
 		{
 			name: "new id creates a user",
 			inputUser: &model.User{
-				ID:          "c1111111-1111-1111-1111-111111111111",
+				Base:        fixture.GetTestBase("c1111111-1111-1111-1111-111111111111"),
 				DisplayName: "New User",
 				UserName:    "newuser",
 				Password:    "pwd123",
@@ -185,7 +185,7 @@ func TestSqlRepository_UpdateUser(t *testing.T) {
 		{
 			name: "duplicate username returns parsed database error",
 			inputUser: &model.User{
-				ID:          existingUser1.ID,
+				Base:        fixture.GetTestBase(existingUser1.ID),
 				DisplayName: existingUser1.DisplayName,
 				UserName:    existingUser2.UserName,
 				Password:    existingUser1.Password,
@@ -196,7 +196,7 @@ func TestSqlRepository_UpdateUser(t *testing.T) {
 		{
 			name: "duplicate email returns parsed database error",
 			inputUser: &model.User{
-				ID:          existingUser1.ID,
+				Base:        fixture.GetTestBase(existingUser1.ID),
 				DisplayName: existingUser1.DisplayName,
 				UserName:    "unique_user",
 				Password:    existingUser1.Password,
@@ -232,7 +232,7 @@ func testUserUpdates(t *testing.T, testCases []userUpdateCase) {
 			}
 
 			var got model.User
-			if err := db.First(&got, "id = ?", tc.inputUser.ID).Error; err != nil {
+			if err := db.First(&got, "id = ?", tc.inputUser.Base.ID).Error; err != nil {
 				t.Fatalf("failed to fetch stored user: %v", err)
 			}
 			assertUserEqual(t, tc.inputUser, &got)

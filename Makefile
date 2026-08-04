@@ -29,6 +29,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make help              Show this help message"
 	@echo "  make deps              Download Go modules"
+	@echo "  make drop-db-version  	Drop schema_migrations table - for dev"
 	@echo "  make tidy              Clean up module dependencies"
 	@echo "  make test              Run tests with coverage report"
 	@echo "  make run               Run the application"
@@ -52,7 +53,7 @@ tidy:
 	$(GO) mod tidy
 
 
-COVERAGE_EXCLUDE=mocks|main|test|docs|response|validation|dbutils|sqldb
+COVERAGE_EXCLUDE=mocks|main|test|docs|response|validation|dbutils|sqldb|infrastructure
 COVERAGE_THRESHOLD ?= 80
 
 test:
@@ -116,6 +117,9 @@ docker-release:
 generate-rsa-key:
 	openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 	openssl rsa -pubout -in private.pem -out public.pem
+
+drop-db-version:
+	docker compose exec postgres psql -U admin -d bookmark -c "DROP TABLE IF EXISTS schema_migrations;"
 
 clean:
 	rm -rf $(BIN_DIR) coverage.out coverage.html coverage.tmp
