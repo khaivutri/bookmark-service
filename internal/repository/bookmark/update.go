@@ -8,10 +8,20 @@ import (
 )
 
 // UpdateBookmark saves changes to an existing bookmark record.
-func (r *bookmarkRepo) UpdateBookmark(ctx context.Context, bookmark *model.Bookmark) (error) {
-	err := r.db.WithContext(ctx).Save(bookmark).Error
-	if err != nil {
-		return dbutils.ParseDBError(err)
+func (r *bookmarkRepo) UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error {
+	res := r.db.WithContext(ctx).Where("id = ?", bookmarkID).Updates(model.Bookmark{
+		Description: description,
+		URL:         url,
+	})
+
+	if res.Error != nil {
+		return dbutils.ParseDBError(res.Error)
 	}
+
+	// GORM's Updates returns RowsAffected == 0 if no row matches the WHERE condition
+	if res.RowsAffected == 0 {
+		return dbutils.ErrRecordNotFound
+	}
+
 	return nil
 }

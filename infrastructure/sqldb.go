@@ -15,10 +15,7 @@ func createDB() *gorm.DB{
 
 const migrationPath = "file://./migrations"
 func migrate(dbClient *gorm.DB) {
-	// err := dbClient.AutoMigrate(&model.User{})
-	// if err != nil {
-	// 	panic(err)
-	// }
+	
 
 	err := sqldb.MigrateSQLDB(dbClient, migrationPath, "up", 0)
 	if err != nil {

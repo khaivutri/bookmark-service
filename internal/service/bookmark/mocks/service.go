@@ -17,9 +17,9 @@ type BookmarkService struct {
 	mock.Mock
 }
 
-// AddBookmark provides a mock function with given fields: ctx, descriptio, url, userID
-func (_m *BookmarkService) AddBookmark(ctx context.Context, descriptio string, url string, userID string) (*model.Bookmark, error) {
-	ret := _m.Called(ctx, descriptio, url, userID)
+// AddBookmark provides a mock function with given fields: ctx, description, url, userID
+func (_m *BookmarkService) AddBookmark(ctx context.Context, description string, url string, userID string) (*model.Bookmark, error) {
+	ret := _m.Called(ctx, description, url, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddBookmark")
@@ -28,10 +28,10 @@ func (_m *BookmarkService) AddBookmark(ctx context.Context, descriptio string, u
 	var r0 *model.Bookmark
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*model.Bookmark, error)); ok {
-		return rf(ctx, descriptio, url, userID)
+		return rf(ctx, description, url, userID)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *model.Bookmark); ok {
-		r0 = rf(ctx, descriptio, url, userID)
+		r0 = rf(ctx, description, url, userID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Bookmark)
@@ -39,7 +39,7 @@ func (_m *BookmarkService) AddBookmark(ctx context.Context, descriptio string, u
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
-		r1 = rf(ctx, descriptio, url, userID)
+		r1 = rf(ctx, description, url, userID)
 	} else {
 		r1 = ret.Error(1)
 	}

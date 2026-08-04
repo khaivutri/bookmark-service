@@ -159,17 +159,17 @@ func (_m *BookmarkRepository) GetBookmarks(ctx context.Context, userID string, l
 	return r0, r1, r2
 }
 
-// UpdateBookmark provides a mock function with given fields: ctx, _a1
-func (_m *BookmarkRepository) UpdateBookmark(ctx context.Context, _a1 *model.Bookmark) error {
-	ret := _m.Called(ctx, _a1)
+// UpdateBookmark provides a mock function with given fields: ctx, bookmarkID, description, url
+func (_m *BookmarkRepository) UpdateBookmark(ctx context.Context, bookmarkID string, description string, url string) error {
+	ret := _m.Called(ctx, bookmarkID, description, url)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateBookmark")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.Bookmark) error); ok {
-		r0 = rf(ctx, _a1)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(ctx, bookmarkID, description, url)
 	} else {
 		r0 = ret.Error(0)
 	}
