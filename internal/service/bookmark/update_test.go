@@ -28,7 +28,7 @@ func runUpdateBookmarkTest(t *testing.T, tc updateBookmarkTestCase) {
 	repo := tc.setupMockRepo(t)
 	svc := &bookmarkService{repo: repo}
 
-	err := svc.UpdateBookmark(t.Context(), tc.inputBookmarkID, tc.inputDescription, tc.inputURL)
+	err := svc.UpdateBookmark(t.Context(), "", tc.inputBookmarkID, tc.inputDescription, tc.inputURL)
 
 	if tc.expectedErr != nil {
 		require.ErrorIs(t, err, tc.expectedErr)
@@ -48,7 +48,7 @@ func setupUpdateBookmarkRepo(
 	t.Helper()
 
 	repo := repoMocks.NewBookmarkRepository(t)
-	repo.On("UpdateBookmark", t.Context(), bookmarkID, description, url).
+	repo.On("UpdateBookmark", t.Context(), "", bookmarkID, description, url).
 		Return(updateErr).
 		Once()
 

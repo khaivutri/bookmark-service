@@ -44,17 +44,17 @@ func (_m *BookmarkRepository) CreateBookmark(ctx context.Context, newBookmark *m
 	return r0, r1
 }
 
-// DeleteBookmarkByID provides a mock function with given fields: ctx, id
-func (_m *BookmarkRepository) DeleteBookmarkByID(ctx context.Context, id string) error {
-	ret := _m.Called(ctx, id)
+// DeleteBookmarkByID provides a mock function with given fields: ctx, userID, bookmarkID
+func (_m *BookmarkRepository) DeleteBookmarkByID(ctx context.Context, userID string, bookmarkID string) error {
+	ret := _m.Called(ctx, userID, bookmarkID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteBookmarkByID")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, userID, bookmarkID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -159,17 +159,17 @@ func (_m *BookmarkRepository) GetBookmarks(ctx context.Context, userID string, l
 	return r0, r1, r2
 }
 
-// UpdateBookmark provides a mock function with given fields: ctx, bookmarkID, description, url
-func (_m *BookmarkRepository) UpdateBookmark(ctx context.Context, bookmarkID string, description string, url string) error {
-	ret := _m.Called(ctx, bookmarkID, description, url)
+// UpdateBookmark provides a mock function with given fields: ctx, userID, bookmarkID, description, url
+func (_m *BookmarkRepository) UpdateBookmark(ctx context.Context, userID string, bookmarkID string, description string, url string) error {
+	ret := _m.Called(ctx, userID, bookmarkID, description, url)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateBookmark")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
-		r0 = rf(ctx, bookmarkID, description, url)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) error); ok {
+		r0 = rf(ctx, userID, bookmarkID, description, url)
 	} else {
 		r0 = ret.Error(0)
 	}

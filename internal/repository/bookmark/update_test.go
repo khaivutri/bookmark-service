@@ -47,7 +47,7 @@ func testBookmarkUpdates(t *testing.T, testCases []bookmarkUpdateCase) {
 			t.Parallel()
 
 			repo, db := newTestRepository(t)
-			err := repo.UpdateBookmark(t.Context(), tc.bookmarkID, tc.description, tc.url)
+			err := repo.UpdateBookmark(t.Context(),"", tc.bookmarkID, tc.description, tc.url)
 			assertUpdateResult(t, db, tc, err)
 		})
 	}

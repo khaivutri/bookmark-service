@@ -8,14 +8,16 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/khaivutri/bookmark-service/internal/service/bookmark/mocks"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	updateBookmarkID  = "bookmark-123"
-	updateDescription = "Updated description"
-	updateURL         = "https://go.dev/doc/"
+	updateBookmarkID     = "bookmark-123"
+	updateBookmarkUserID = "user-123"
+	updateDescription    = "Updated description"
+	updateURL            = "https://go.dev/doc/"
 )
 
 type updateBookmarkHandlerTestCase struct {
@@ -79,7 +81,7 @@ func TestBookmarkHandler_UpdateBookmark(t *testing.T) {
 			ctx, recorder := newUpdateBookmarkContext(testCase.body, testCase.query)
 			service := mocks.NewBookmarkService(t)
 			if testCase.configureService {
-				service.On("UpdateBookmark", ctx, updateBookmarkID, updateDescription, updateURL).
+				service.On("UpdateBookmark", ctx, updateBookmarkUserID, updateBookmarkID, updateDescription, updateURL).
 					Return(testCase.serviceErr).Once()
 			}
 
@@ -99,6 +101,7 @@ func newUpdateBookmarkContext(body, query string) (*gin.Context, *httptest.Respo
 		bytes.NewBufferString(body),
 	)
 	ctx.Request.Header.Set("Content-Type", "application/json")
+	ctx.Set("claims", jwt.MapClaims{"sub": updateBookmarkUserID})
 	return ctx, recorder
 }
 

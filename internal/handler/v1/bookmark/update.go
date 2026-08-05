@@ -31,8 +31,14 @@ func (b *bookmarkHandler) UpdateBookmark(ctx *gin.Context) {
 		return
 	}
 	
+	// get user id
+	uid, err := requestutils.GetUserIDFromRequest(ctx)
+	if err != nil {
+		return
+	}
+
 	// call service to update bookmark
-	err = b.svc.UpdateBookmark(ctx, input.ID, input.Description, input.URL)
+	err = b.svc.UpdateBookmark(ctx, uid, input.ID, input.Description, input.URL)
 	if err != nil {
 		log.Error().Err(err).Str("from", "handler.bookmark.UpdateBookmark").Msg("Fail to update bookmark")
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrMessage{Message: "Fail to update bookmark"})

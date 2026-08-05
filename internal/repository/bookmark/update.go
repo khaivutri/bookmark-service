@@ -8,7 +8,7 @@ import (
 )
 
 // UpdateBookmark saves changes to an existing bookmark record.
-func (r *bookmarkRepo) UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error {
+func (r *bookmarkRepo) UpdateBookmark(ctx context.Context, userID, bookmarkID, description, url string) error {
 	res := r.db.WithContext(ctx).Where("id = ?", bookmarkID).Updates(model.Bookmark{
 		Description: description,
 		URL:         url,
