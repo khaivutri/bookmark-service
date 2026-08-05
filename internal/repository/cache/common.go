@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// DBCache defines cache operations for storing and retrieving grouped items.
+// Implementations are typically backed by Redis or another fast key-value store.
 type DBCache interface {
 
 	// SetCacheData sets a cached data item with the given key, value and expiration time.

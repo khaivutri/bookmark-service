@@ -51,12 +51,12 @@ func (u *userHandler) Register(ctx *gin.Context) {
 	}
 	response := &userDTO.RegisterResponse{
 		Data: userDTO.RegisterData{
-			ID: user.ID,
-			Username: user.UserName,
+			ID:          user.ID,
+			Username:    user.UserName,
 			DisplayName: user.DisplayName,
-			Email: user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+			Email:       user.Email,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
 		},
 		Message: "User registered successfully!",
 	}

@@ -6,28 +6,31 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/khaivutri/bookmark-service/internal/model"
 	"github.com/khaivutri/bookmark-service/internal/repository/cache"
 	"github.com/rs/zerolog/log"
-	"github.com/khaivutri/bookmark-service/internal/model"
 )
 
 const (
 	getBookmarksCacheGroupKeyFormat = "get_bookmarks_%s"
-	getBookmarksCacheKeyFormat = "%d_%d"
-	getBookmarksCacheExpTime = 24 * time.Hour
+	getBookmarksCacheKeyFormat      = "%d_%d"
+	getBookmarksCacheExpTime        = 24 * time.Hour
 )
+
 type bookmarkServiceWithCache struct {
-	svc   	BookmarkService
-	c 	cache.DBCache
+	svc BookmarkService
+	c   cache.DBCache
 }
 
+// NewServiceWithCache returns a BookmarkService decorated with cache invalidation and retrieval.
 func NewServiceWithCache(s BookmarkService, c cache.DBCache) BookmarkService {
 	return &bookmarkServiceWithCache{
-										svc: s,
-										c: c,
-									}
+		svc: s,
+		c:   c,
+	}
 }
 
+// AddBookmark invalidates user bookmark cache before adding a new bookmark.
 func (s *bookmarkServiceWithCache) AddBookmark(ctx context.Context, description, url, userID string) (*model.Bookmark, error) {
 	// create cache key
 	cacheGroupKey := fmt.Sprintf(getBookmarksCacheGroupKeyFormat, userID)
@@ -41,10 +44,11 @@ func (s *bookmarkServiceWithCache) AddBookmark(ctx context.Context, description,
 	return s.svc.AddBookmark(ctx, description, url, userID)
 
 }
+// GetBookmarks returns cached bookmarks when available, otherwise loads from the underlying service and caches the result.
 func (s *bookmarkServiceWithCache) GetBookmarks(ctx context.Context, userID string, page, limit int) (*GetBookmarkResponse, error) {
 	// create cache key
 	cacheGroupKey := fmt.Sprintf(getBookmarksCacheGroupKeyFormat, userID)
-	
+
 	cacheKey := fmt.Sprintf(getBookmarksCacheKeyFormat, page, limit)
 
 	// get cache data
@@ -53,7 +57,7 @@ func (s *bookmarkServiceWithCache) GetBookmarks(ctx context.Context, userID stri
 		result := &GetBookmarkResponse{}
 
 		err := json.Unmarshal(cacheData, result)
-		
+
 		if err != nil {
 
 			// error data - > delete cache
@@ -64,7 +68,7 @@ func (s *bookmarkServiceWithCache) GetBookmarks(ctx context.Context, userID stri
 				log.Err(err).Str("key", cacheGroupKey).Msg("fail to delete cache")
 			}
 
-		}else {
+		} else {
 			return result, nil
 		}
 	}
@@ -74,12 +78,12 @@ func (s *bookmarkServiceWithCache) GetBookmarks(ctx context.Context, userID stri
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// save cache
 	resultBytes, err := json.Marshal(result)
 	if err == nil {
 		cacheErr := s.c.SetCacheData(ctx, cacheGroupKey, cacheKey, resultBytes, getBookmarksCacheExpTime)
-		
+
 		// log error
 		if cacheErr != nil {
 			log.Err(cacheErr).Str("key", cacheGroupKey).Msg("fail to set cache")
@@ -87,9 +91,10 @@ func (s *bookmarkServiceWithCache) GetBookmarks(ctx context.Context, userID stri
 	}
 
 	// return result
-	return result, nil 
+	return result, nil
 }
 
+// UpdateBookmark invalidates user bookmark cache before updating a bookmark.
 func (s *bookmarkServiceWithCache) UpdateBookmark(ctx context.Context, userID, bookmarkID, description, url string) error {
 	// create cache key
 	cacheGroupKey := fmt.Sprintf(getBookmarksCacheGroupKeyFormat, userID)
@@ -101,9 +106,10 @@ func (s *bookmarkServiceWithCache) UpdateBookmark(ctx context.Context, userID, b
 	}
 
 	return s.svc.UpdateBookmark(ctx, userID, bookmarkID, description, url)
-	
+
 }
 
+// DeleteBookmark invalidates user bookmark cache before deleting a bookmark.
 func (s *bookmarkServiceWithCache) DeleteBookmark(ctx context.Context, userID, bookmarkID string) error {
 	// create cache key
 	cacheGroupKey := fmt.Sprintf(getBookmarksCacheGroupKeyFormat, userID)

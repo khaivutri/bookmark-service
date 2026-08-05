@@ -31,18 +31,18 @@ func (u *userHandler) Login(ctx *gin.Context) {
 
 	token, err := u.svc.Login(ctx, body.Username, body.Password)
 	switch {
-		case errors.Is(err, user.ErrInvalidCredential):
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, response.ErrMessage{Message: "invalid credential"})
-			return
-		case err == nil:
-		default: 
-			log.Error().Err(err).Str("from", "handler.user.Login").Msg("failed to login")
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerErrResponse)
-			return
+	case errors.Is(err, user.ErrInvalidCredential):
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, response.ErrMessage{Message: "invalid credential"})
+		return
+	case err == nil:
+	default:
+		log.Error().Err(err).Str("from", "handler.user.Login").Msg("failed to login")
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerErrResponse)
+		return
 	}
 
 	ctx.JSON(http.StatusOK, userDTO.LoginResponse{
-													Message: 	"Logged in successfully!", 
-													Data: 		token,
-												})
+		Message: "Logged in successfully!",
+		Data:    token,
+	})
 }
