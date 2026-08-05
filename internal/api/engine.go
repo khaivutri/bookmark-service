@@ -97,9 +97,10 @@ func (e *engine) initHandlers() *handlers {
 	dbPinger := repository.NewDBPinger(e.db)
 	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId, redisPinger, dbPinger)
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
+	bookmarkRepository := bookmarkRepo.NewRepository(e.db)
 
 	// Init shorten URL handler
-	urlStorage := repository.NewURLStorage(e.redis)
+	urlStorage := repository.NewURLStorage(e.redis, bookmarkRepository)
 	shortenURLSvc := service.NewURLStorage(urlStorage, utils.NewGenCode())
 	shortenURL := v1.NewShortenURL(shortenURLSvc)
 
@@ -109,11 +110,9 @@ func (e *engine) initHandlers() *handlers {
 	userSvc := userSvc.NewService(userRepo, hasher, e.jwtGen)
 	registerHandler := userHandler.NewHandler(userSvc)
 
-
 	// Init cache repository
 	cacheRepo := cache.NewRedisDB(e.redis)
 	// Init bookmark handler
-	bookmarkRepository := bookmarkRepo.NewRepository(e.db)
 	bookmarkService := bookmarkSvc.NewBookmarkService(bookmarkRepository, utils.NewGenCode())
 	bookmarkServiceWithCache := bookmarkSvc.NewServiceWithCache(bookmarkService, cacheRepo)
 	bookmarkHandler := bookmark.NewBookmarkHandler(bookmarkServiceWithCache)
