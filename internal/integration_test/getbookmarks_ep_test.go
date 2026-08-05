@@ -6,8 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/khaivutri/bookmark-service/internal/api"
 	"github.com/khaivutri/bookmark-service/internal/model"
 	fixture "github.com/khaivutri/bookmark-service/internal/test/data/fixture"
+	jwtmocks "github.com/khaivutri/bookmark-service/pkg/jwtutils/mocks"
+	redisPkg "github.com/khaivutri/bookmark-service/pkg/redis"
+	"github.com/khaivutri/bookmark-service/pkg/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -79,6 +85,57 @@ func TestBookmarkEndpoint_GetBookmarks(t *testing.T) {
 			assertGetBookmarksResponse(t, recorder, tc)
 		})
 	}
+}
+
+func TestBookmarkEndpoint_GetBookmarks_ReturnsCachedResponse(t *testing.T) {
+	db := setupGetBookmarksDB(t)
+
+	t.Setenv("INSTANCE_ID", "cbe1a562-596b-45d0-bf8b-a999b23b184a")
+	t.Setenv("SERVICE_NAME", "bookmark_service_test")
+	require.NoError(t, validation.RegisterValidation())
+
+	cfg, err := api.NewConfig()
+	require.NoError(t, err)
+
+	jwtValidator := jwtmocks.NewJWTValidator(t)
+	jwtValidator.
+		On("ValidateJWT", getBookmarksToken).
+		Return(jwt.MapClaims{"sub": getBookmarksUserID}, nil).
+		Twice()
+
+	testAPI := api.NewEngine(api.EngineOpts{
+		App:    gin.New(),
+		Cfg:    cfg,
+		Redis:  redisPkg.InitMockRedis(t),
+		DB:     db,
+		JWTVal: jwtValidator,
+	})
+
+	firstResponse := serveGetBookmarksRequest(t, testAPI)
+	require.Equal(t, http.StatusOK, firstResponse.Code)
+
+	closeDatabase(t, db)
+
+	secondResponse := serveGetBookmarksRequest(t, testAPI)
+	require.Equal(t, http.StatusOK, secondResponse.Code)
+	assertGetBookmarksResponse(t, secondResponse, getBookmarksTestCase{
+		expectedPage:  1,
+		expectedLimit: 1,
+		expectedTotal: 2,
+		expectedCodes: []string{"code1"},
+	})
+}
+
+const getBookmarksToken = "get-bookmarks-test-token"
+
+func serveGetBookmarksRequest(t *testing.T, testAPI http.Handler) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodGet, getBookmarksEndpoint+"?page=1&limit=1", nil)
+	req.Header.Set("Authorization", "Bearer "+getBookmarksToken)
+	recorder := httptest.NewRecorder()
+	testAPI.ServeHTTP(recorder, req)
+	return recorder
 }
 
 func setupGetBookmarksDB(t *testing.T) *gorm.DB {
