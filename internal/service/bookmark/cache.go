@@ -82,7 +82,7 @@ func (s *bookmarkServiceWithCache) GetBookmarks(ctx context.Context, userID stri
 		
 		// log error
 		if cacheErr != nil {
-			log.Err(err).Str("key", cacheGroupKey).Msg("fail to set cache")
+			log.Err(cacheErr).Str("key", cacheGroupKey).Msg("fail to set cache")
 		}
 	}
 
