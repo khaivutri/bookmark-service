@@ -47,17 +47,17 @@ func (_m *BookmarkService) AddBookmark(ctx context.Context, description string, 
 	return r0, r1
 }
 
-// DeleteBookmark provides a mock function with given fields: ctx, bookmarkID
-func (_m *BookmarkService) DeleteBookmark(ctx context.Context, bookmarkID string) error {
-	ret := _m.Called(ctx, bookmarkID)
+// DeleteBookmark provides a mock function with given fields: ctx, userID, bookmarkID
+func (_m *BookmarkService) DeleteBookmark(ctx context.Context, userID string, bookmarkID string) error {
+	ret := _m.Called(ctx, userID, bookmarkID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteBookmark")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, bookmarkID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, userID, bookmarkID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -95,17 +95,17 @@ func (_m *BookmarkService) GetBookmarks(ctx context.Context, userID string, page
 	return r0, r1
 }
 
-// UpdateBookmark provides a mock function with given fields: ctx, bookmarkID, description, url
-func (_m *BookmarkService) UpdateBookmark(ctx context.Context, bookmarkID string, description string, url string) error {
-	ret := _m.Called(ctx, bookmarkID, description, url)
+// UpdateBookmark provides a mock function with given fields: ctx, userID, bookmarkID, description, url
+func (_m *BookmarkService) UpdateBookmark(ctx context.Context, userID string, bookmarkID string, description string, url string) error {
+	ret := _m.Called(ctx, userID, bookmarkID, description, url)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateBookmark")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
-		r0 = rf(ctx, bookmarkID, description, url)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) error); ok {
+		r0 = rf(ctx, userID, bookmarkID, description, url)
 	} else {
 		r0 = ret.Error(0)
 	}

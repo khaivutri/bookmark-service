@@ -7,12 +7,16 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/khaivutri/bookmark-service/internal/service/bookmark/mocks"
 	"github.com/khaivutri/bookmark-service/pkg/dbutils"
 	"github.com/stretchr/testify/require"
 )
 
-const deleteBookmarkID = "bookmark-123"
+const (
+	deleteBookmarkID     = "bookmark-123"
+	deleteBookmarkUserID = "user-123"
+)
 
 type deleteBookmarkHandlerTestCase struct {
 	name             string
@@ -65,7 +69,7 @@ func TestBookmarkHandler_DeleteBookmark(t *testing.T) {
 			ctx, recorder := newDeleteBookmarkContext(tc.query)
 			service := mocks.NewBookmarkService(t)
 			if tc.configureService {
-				service.On("DeleteBookmark", ctx, deleteBookmarkID).
+				service.On("DeleteBookmark", ctx, deleteBookmarkUserID, deleteBookmarkID).
 					Return(tc.serviceErr).
 					Once()
 			}
@@ -81,6 +85,7 @@ func newDeleteBookmarkContext(query string) (*gin.Context, *httptest.ResponseRec
 	recorder := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(recorder)
 	ctx.Request = httptest.NewRequest(http.MethodDelete, "/v1/bookmarks"+query, nil)
+	ctx.Set("claims", jwt.MapClaims{"sub": deleteBookmarkUserID})
 	return ctx, recorder
 }
 

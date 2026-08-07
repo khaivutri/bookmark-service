@@ -13,10 +13,10 @@ type errorFilter = []func(err error) (bool, error)
 var (
 	ErrDuplicateUserName = errors.New("username already exists")
 	ErrDuplicateEmail    = errors.New("email already exists")
-	
+
 	ErrDuplicateBookmarkCode = errors.New("bookmark code already exists")
 
-	ErrRecordNotFound    = errors.New("record not found")
+	ErrRecordNotFound = errors.New("record not found")
 )
 
 func filterDuplicateBookmarkCode(err error) (bool, error) {
@@ -31,12 +31,12 @@ func filterDuplicateBookmarkCode(err error) (bool, error) {
 		strings.Contains(msg, "bookmarks.code"), ErrDuplicateBookmarkCode
 }
 
-
 func filterDuplicateUserName(err error) (bool, error) {
 	// PostgreSQL
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return pgErr.ConstraintName == "uni_users_username" || pgErr.ConstraintName == "uni_users_uusername", ErrDuplicateUserName
+		return pgErr.ConstraintName == "uni_username" ||
+			pgErr.ConstraintName == "uni_users_username", ErrDuplicateUserName
 	}
 	// SQLite: "UNIQUE constraint failed: users.username" or "UNIQUE constraint failed: users.user_name"
 	msg := strings.ToLower(err.Error())
@@ -48,7 +48,8 @@ func filterDuplicateEmail(err error) (bool, error) {
 	// PostgreSQL
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return pgErr.ConstraintName == "uni_users_email", ErrDuplicateEmail
+		return pgErr.ConstraintName == "uni_email" ||
+			pgErr.ConstraintName == "uni_users_email", ErrDuplicateEmail
 	}
 	// SQLite: "UNIQUE constraint failed: users.email"
 	msg := strings.ToLower(err.Error())

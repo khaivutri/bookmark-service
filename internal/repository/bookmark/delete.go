@@ -8,8 +8,8 @@ import (
 )
 
 // DeleteBookmarkByID deletes a bookmark record by its unique ID.
-func (b *bookmarkRepo) DeleteBookmarkByID(ctx context.Context, id string) error {
-	res := b.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Bookmark{})
+func (b *bookmarkRepo) DeleteBookmarkByID(ctx context.Context, userID, bookmarkID string) error {
+	res := b.db.WithContext(ctx).Where("id = ?", bookmarkID).Delete(&model.Bookmark{})
 	if res.Error != nil {
 		return dbutils.ParseDBError(res.Error)
 	}

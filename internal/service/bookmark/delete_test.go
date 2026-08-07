@@ -32,11 +32,11 @@ func TestBookmarkService_DeleteBookmark(t *testing.T) {
 			t.Parallel()
 
 			repo := repoMocks.NewBookmarkRepository(t)
-			repo.On("DeleteBookmarkByID", t.Context(), tc.bookmarkID).
+			repo.On("DeleteBookmarkByID", t.Context(), "", tc.bookmarkID).
 				Return(tc.repoErr).
 				Once()
 
-			err := (&bookmarkService{repo: repo}).DeleteBookmark(t.Context(), tc.bookmarkID)
+			err := (&bookmarkService{repo: repo}).DeleteBookmark(t.Context(), "", tc.bookmarkID)
 
 			require.ErrorIs(t, err, tc.repoErr)
 		})

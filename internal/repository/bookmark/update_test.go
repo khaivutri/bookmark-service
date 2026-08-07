@@ -11,6 +11,7 @@ import (
 
 type bookmarkUpdateCase struct {
 	name         string
+	userID       string
 	bookmarkID   string
 	description  string
 	url          string
@@ -24,6 +25,7 @@ func TestBookmarkRepo_UpdateBookmark(t *testing.T) {
 	testBookmarkUpdates(t, []bookmarkUpdateCase{
 		{
 			name:         "updates existing bookmark successfully",
+			userID:       existingBookmark1.UserID,
 			bookmarkID:   existingBookmark1.ID,
 			description:  "updated description",
 			url:          "https://updated.example.com",
@@ -31,7 +33,16 @@ func TestBookmarkRepo_UpdateBookmark(t *testing.T) {
 		},
 		{
 			name:        "non-existing id returns record not found",
+			userID:      existingBookmark1.UserID,
 			bookmarkID:  "c1111111-1111-1111-1111-111111111111",
+			description: "some description",
+			url:         "https://example.com",
+			expectedErr: dbutils.ErrRecordNotFound,
+		},
+		{
+			name:        "returns record not found for another user's bookmark",
+			userID:      "another-user",
+			bookmarkID:  existingBookmark1.ID,
 			description: "some description",
 			url:         "https://example.com",
 			expectedErr: dbutils.ErrRecordNotFound,
@@ -47,7 +58,7 @@ func testBookmarkUpdates(t *testing.T, testCases []bookmarkUpdateCase) {
 			t.Parallel()
 
 			repo, db := newTestRepository(t)
-			err := repo.UpdateBookmark(t.Context(), tc.bookmarkID, tc.description, tc.url)
+			err := repo.UpdateBookmark(t.Context(), tc.userID, tc.bookmarkID, tc.description, tc.url)
 			assertUpdateResult(t, db, tc, err)
 		})
 	}
@@ -67,7 +78,7 @@ func assertUpdateResult(t *testing.T, db *gorm.DB, tc bookmarkUpdateCase, err er
 	}
 
 	var got model.Bookmark
-	assert.NoError(t, db.First(&got, "id = ?", tc.bookmarkID).Error)
+	assert.NoError(t, db.First(&got, "id = ? AND user_id = ?", tc.bookmarkID, tc.userID).Error)
 	assert.Equal(t, tc.description, got.Description)
 	assert.Equal(t, tc.url, got.URL)
 }

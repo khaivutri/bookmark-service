@@ -22,10 +22,10 @@ type BookmarkRepository interface {
 	GetBookmarkByCode(ctx context.Context, code string) (*model.Bookmark, error)
 
 	// UpdateBookmark saves changes to an existing bookmark record.
-	UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error
+	UpdateBookmark(ctx context.Context, userID, bookmarkID, description, url string) error
 
 	// DeleteBookmarkByID deletes a bookmark record by its unique ID.
-	DeleteBookmarkByID(ctx context.Context, id string) error
+	DeleteBookmarkByID(ctx context.Context, userID, bookmarkID string) error
 }
 
 type bookmarkRepo struct {

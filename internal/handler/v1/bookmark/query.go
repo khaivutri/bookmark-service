@@ -22,7 +22,7 @@ type getBookmarkRequest struct {
 // @Tags         Bookmarks
 // @Security     BearerAuth
 // @Produce      application/json
-// @Param        page   query     int                                             false  "Page number"    default(1)  minimum(1)
+// @Param        page   query     int  	                                           false  "Page number"    default(1)  minimum(1)
 // @Param        limit  query     int                                             false  "Items per page" default(10) minimum(1)
 // @Success      200    {object}  bookmark.GetBookmarksResponse                  "Bookmarks retrieved successfully"
 // @Failure      400    {object}  response.ErrMessage                             "Bad Request / Invalid input"

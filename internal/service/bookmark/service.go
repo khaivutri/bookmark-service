@@ -18,10 +18,10 @@ type BookmarkService interface {
 	GetBookmarks(ctx context.Context, userID string, page, limit int) (*GetBookmarkResponse, error)
 
 	// UpdateBookmark updates description and URL values of an existing bookmark.
-	UpdateBookmark(ctx context.Context, bookmarkID, description, url string) error
+	UpdateBookmark(ctx context.Context, userID, bookmarkID, description, url string) error
 	
 	// DeleteBookmark deletes a bookmark by its unique ID.
-	DeleteBookmark(ctx context.Context, bookmarkID string) error
+	DeleteBookmark(ctx context.Context, userID, bookmarkID string) error
 }
 
 type bookmarkService struct {

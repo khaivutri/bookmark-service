@@ -21,6 +21,7 @@ import (
 // @Param 		 request body user.RegisterRequest true "Register request"
 // @Success      201  {object}  user.RegisterResponse  "Register response"
 // @Failure      400  {object}  map[string]string  "Bad Request"
+// @Failure      409  {object}  map[string]string  "Conflict"
 // @Failure      500  {object}  map[string]string  "Internal Server Error"
 // @Router       /v1/users/register [post]
 // Register handles user registration requests.
@@ -50,12 +51,12 @@ func (u *userHandler) Register(ctx *gin.Context) {
 	}
 	response := &userDTO.RegisterResponse{
 		Data: userDTO.RegisterData{
-			ID: user.ID,
-			Username: user.UserName,
+			ID:          user.ID,
+			Username:    user.UserName,
 			DisplayName: user.DisplayName,
-			Email: user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+			Email:       user.Email,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
 		},
 		Message: "User registered successfully!",
 	}

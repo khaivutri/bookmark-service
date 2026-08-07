@@ -50,7 +50,7 @@ func TestBookmarkRepo_DeleteBookmarkByID(t *testing.T) {
 				tc.setup(t, db)
 			}
 
-			err := repo.DeleteBookmarkByID(t.Context(), tc.id)
+			err := repo.DeleteBookmarkByID(t.Context(),"", tc.id)
 			assertDeleteResult(t, db, tc, err)
 		})
 	}

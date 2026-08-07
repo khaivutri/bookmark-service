@@ -12,6 +12,7 @@ import (
 	"github.com/khaivutri/bookmark-service/internal/handler/v1/bookmark"
 	userHandler "github.com/khaivutri/bookmark-service/internal/handler/v1/user"
 	"github.com/khaivutri/bookmark-service/internal/repository"
+	"github.com/khaivutri/bookmark-service/internal/repository/cache"
 	userRepo "github.com/khaivutri/bookmark-service/internal/repository/user"
 	"github.com/khaivutri/bookmark-service/internal/service"
 	userSvc "github.com/khaivutri/bookmark-service/internal/service/user"
@@ -96,9 +97,10 @@ func (e *engine) initHandlers() *handlers {
 	dbPinger := repository.NewDBPinger(e.db)
 	healthCheckSvc := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceId, redisPinger, dbPinger)
 	healthCheck := handler.NewHealthCheck(healthCheckSvc)
+	bookmarkRepository := bookmarkRepo.NewRepository(e.db)
 
 	// Init shorten URL handler
-	urlStorage := repository.NewURLStorage(e.redis)
+	urlStorage := repository.NewURLStorage(e.redis, bookmarkRepository)
 	shortenURLSvc := service.NewURLStorage(urlStorage, utils.NewGenCode())
 	shortenURL := v1.NewShortenURL(shortenURLSvc)
 
@@ -108,10 +110,12 @@ func (e *engine) initHandlers() *handlers {
 	userSvc := userSvc.NewService(userRepo, hasher, e.jwtGen)
 	registerHandler := userHandler.NewHandler(userSvc)
 
+	// Init cache repository
+	cacheRepo := cache.NewRedisDB(e.redis)
 	// Init bookmark handler
-	bookmarkRepo := bookmarkRepo.NewRepository(e.db)
-	bookmarkSvc := bookmarkSvc.NewBookmarkService(bookmarkRepo, utils.NewGenCode())
-	bookmarkHandler := bookmark.NewBookmarkHandler(bookmarkSvc)
+	bookmarkService := bookmarkSvc.NewBookmarkService(bookmarkRepository, utils.NewGenCode())
+	bookmarkServiceWithCache := bookmarkSvc.NewServiceWithCache(bookmarkService, cacheRepo)
+	bookmarkHandler := bookmark.NewBookmarkHandler(bookmarkServiceWithCache)
 
 	return &handlers{healthCheck, shortenURL, registerHandler, bookmarkHandler}
 }

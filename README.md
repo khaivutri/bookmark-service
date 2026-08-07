@@ -441,6 +441,26 @@ Authorization: Bearer <your-jwt-token>
 | PUT    | `/v1/bookmarks?id=<bookmark-id>` | Update an existing bookmark                                   | `200 OK`         |
 | DELETE | `/v1/bookmarks?id=<bookmark-id>` | Delete an existing bookmark                                   | `200 OK`         |
 
+### Bookmark Caching Mechanism
+
+To optimize performance and minimize database query load, the Bookmark CRUD operations utilize a caching decorator (`bookmarkServiceWithCache`) backed by **Redis Hashes**:
+
+#### 1. Query (GET `/v1/bookmarks`)
+- **Cache-Aside Pattern**:
+  - The cache keys are structured using a **Cache Group Key** (as the Redis Hash key) and a **Cache Field Key** (as the Hash field):
+    - **Cache Group Key**: `get_bookmarks_<user_id>` (isolates cache entries by user).
+    - **Cache Field Key**: `<page>_<limit>` (isolates paginated results).
+  - When a query request is made:
+    1. The application checks the Redis cache using `HGET` with the Group Key and Field Key.
+    2. **Cache Hit**: If data exists, it is deserialized from JSON and returned immediately, avoiding a database hit.
+    3. **Cache Miss**: If data is missing, the application queries the **PostgreSQL** database. The result is then serialized to JSON and stored in Redis using `HSET` inside a pipelined transaction (`TxPipelined`), which also sets a Time-To-Live (TTL) of **24 hours** on the entire Group Key.
+
+#### 2. Mutations (POST, PUT, DELETE `/v1/bookmarks`)
+- **Write Invalidation**:
+  - To prevent stale cache data, any mutation operation automatically invalidates the cache for that user.
+  - Adding a new bookmark, updating an existing one, or deleting a bookmark immediately deletes the entire Group Key `get_bookmarks_<user_id>` from Redis using `DEL`.
+  - This invalidates all cached pages and limits for that user, ensuring the next list query fetches fresh data from PostgreSQL and updates the cache.
+
 ### 1. Create Bookmark
 
 | Method | Endpoint        | Description                                   |
@@ -738,6 +758,19 @@ curl -X POST http://localhost:8080/v1/links/shorten \
 | Method | Endpoint                    | Description                              | Success Response |
 | ------ | --------------------------- | ---------------------------------------- | ---------------- |
 | GET    | `/v1/links/redirect/{code}` | Redirects a short code to the stored URL | `302 Found`      |
+
+### Redirection & Storage Mechanism
+
+The service supports different shortcode lengths to determine the storage layer and lifespan of the redirected link:
+
+- **Length = 7 (Temporary Links in Cache)**:
+  - Stored and retrieved from **Redis** cache.
+  - Temporary and short-lived links that expire based on the configured Time-To-Live (TTL).
+- **Length = 10 (Permanent Links in Database)**:
+  - Stored and retrieved from the **PostgreSQL** database.
+  - Permanent links associated with user bookmarks that do not expire.
+- **Other Lengths**:
+  - Unsupported lengths return a `404 Not Found` response with `Code not found` error immediately.
 
 ### Example Request
 

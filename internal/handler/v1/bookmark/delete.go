@@ -31,7 +31,12 @@ func (b *bookmarkHandler) DeleteBookmark(ctx *gin.Context) {
 		return
 	}
 
-	err = b.svc.DeleteBookmark(ctx, query.ID)
+	uid, err := requestutils.GetUserIDFromRequest(ctx)
+	if err != nil {
+		return
+	}
+
+	err = b.svc.DeleteBookmark(ctx, uid, query.ID)
 	switch {
 	case errors.Is(err, nil):
 		break

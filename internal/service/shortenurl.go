@@ -46,7 +46,7 @@ func (s *shortenURL) CreateCodeFromLink(ctx context.Context, url string, exp int
 		return s.CreateCodeFromLink(ctx, url, exp)
 	}
 
-	errSto := s.storage.StoreURL(ctx, code, url, time.Duration(exp))
+	errSto := s.storage.StoreURL(ctx, code, url, time.Duration(exp)*time.Second)
 	if errSto != nil {
 		return "", errSto
 	}

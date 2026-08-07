@@ -15,13 +15,10 @@ const (
 	publicKeyEnv  = "JWT_PUBLIC_KEY"
 )
 
-func CreateApp() api.Engine {
 // CreateApp creates and returns an api.Engine configured with application
 // dependencies (config, validation, logger, Redis, DB, migrations and JWT).
 // Panics on initialization errors.
-//
-// Use: call this once at program start to obtain the ready-to-run engine.
-
+func CreateApp() api.Engine {
 	cfg, err := api.NewConfig()
 	if err != nil {
 		panic(err)
