@@ -30,7 +30,7 @@ func NewURLStorage(redis *redis.Client, db bookmark.BookmarkRepository) URLStora
 
 // StoreURL persists a mapping of short code to original URL in Redis.
 func (s *urlStorage) StoreURL(ctx context.Context, code, url string, exp time.Duration) error {
-	return s.redis.Set(ctx, code, url, exp*time.Second).Err()
+	return s.redis.Set(ctx, code, url, exp).Err()
 }
 
 
