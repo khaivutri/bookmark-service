@@ -2,19 +2,23 @@ package api
 
 import (
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
-
 type Config struct {
-	AppPort     	string 		`default:"8080" envconfig:"APP_PORT"`
-	ServiceName 	string 		`default:"bookmark_service" envconfig:"SERVICE_NAME"`
-	InstanceId  	string 		`default:"" envconfig:"INSTANCE_ID"`
-	LogLevel 		string 		`default:"info" envconfig:"LOG_LEVEL"`
-	BasePath 		string 		`default:"/" envconfig:"BASE_PATH"`
+	AppPort               string        `default:"8080" envconfig:"APP_PORT"`
+	ServiceName           string        `default:"bookmark_service" envconfig:"SERVICE_NAME"`
+	InstanceId            string        `default:"" envconfig:"INSTANCE_ID"`
+	LogLevel              string        `default:"info" envconfig:"LOG_LEVEL"`
+	BasePath              string        `default:"/" envconfig:"BASE_PATH"`
+	RateLimitUserLimit    int           `default:"10" envconfig:"RATE_LIMIT_USER_LIMIT"`
+	RateLimitUserInterval time.Duration `default:"1m" envconfig:"RATE_LIMIT_USER_INTERVAL"`
+	RateLimitIPLimit      int           `default:"20" envconfig:"RATE_LIMIT_IP_LIMIT"`
+	RateLimitIPInterval   time.Duration `default:"1m" envconfig:"RATE_LIMIT_IP_INTERVAL"`
 }
 
 // NewConfig loads application settings from environment variables or a .env file.
@@ -24,7 +28,7 @@ func NewConfig() (*Config, error) {
 	}
 
 	cfg := &Config{}
-	
+
 	err := envconfig.Process("", cfg)
 	if err != nil {
 		return nil, err
@@ -33,7 +37,7 @@ func NewConfig() (*Config, error) {
 	//thread-safety
 	if cfg.InstanceId == "" {
 		cfg.InstanceId = uuid.New().String()
-	}else{
+	} else {
 		//verify if the provided instance ID is a valid UUID
 		if _, err := uuid.Parse(cfg.InstanceId); err != nil {
 			return nil, err

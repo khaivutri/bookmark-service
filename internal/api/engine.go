@@ -13,6 +13,7 @@ import (
 	userHandler "github.com/khaivutri/bookmark-service/internal/handler/v1/user"
 	"github.com/khaivutri/bookmark-service/internal/repository"
 	"github.com/khaivutri/bookmark-service/internal/repository/cache"
+	"github.com/khaivutri/bookmark-service/internal/repository/ratelimit"
 	userRepo "github.com/khaivutri/bookmark-service/internal/repository/user"
 	"github.com/khaivutri/bookmark-service/internal/service"
 	userSvc "github.com/khaivutri/bookmark-service/internal/service/user"
@@ -120,12 +121,28 @@ func (e *engine) initHandlers() *handlers {
 	return &handlers{healthCheck, shortenURL, registerHandler, bookmarkHandler}
 }
 
+type middlewares struct {
+	jwtAuth     middleware.JWTAuther
+	rateLimiter middleware.RateLimiter
+}
+
+func (e *engine) initMiddlewares() middlewares {
+	rateLimitRepo := ratelimit.NewRedisRepo(e.redis)
+	rateLimiter := middleware.NewRateLimiter(rateLimitRepo)
+	jwtAuth := middleware.NewJWTAuth(e.jwtVal)
+
+	return middlewares{
+		jwtAuth:     jwtAuth,
+		rateLimiter: rateLimiter,
+	}
+
+}
 func (e *engine) initRoutes() {
 	allHandlers := e.initHandlers()
 	e.app.HandleMethodNotAllowed = true
 
 	// init middlewares
-	jwtAuth := middleware.NewJWTAuth(e.jwtVal)
+	middlewares := e.initMiddlewares()
 
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -135,25 +152,30 @@ func (e *engine) initRoutes() {
 	{
 		links := v1.Group("/links")
 		{
+			links.Use(middlewares.rateLimiter.LimitByIP(e.cfg.RateLimitIPLimit, e.cfg.RateLimitIPInterval))
 			links.POST("/shorten", allHandlers.linkHandler.CreateShortenLink)
 			links.GET("/redirect/:code", allHandlers.linkHandler.Redirect)
 		}
 
 		users := v1.Group("/users")
 		{
+			users.Use(middlewares.rateLimiter.LimitByIP(e.cfg.RateLimitIPLimit, e.cfg.RateLimitIPInterval))
 			users.POST("/register", allHandlers.registerHandler.Register)
 			users.POST("/login", allHandlers.registerHandler.Login)
 		}
 
 		self := v1.Group("/self")
 		{
-			self.Use(jwtAuth.JWTAuth())
+			self.Use(middlewares.jwtAuth.JWTAuth())
+			self.Use(middlewares.rateLimiter.LimitByUser(e.cfg.RateLimitUserLimit, e.cfg.RateLimitUserInterval))
+
 			self.GET("/info", allHandlers.registerHandler.GetSelfInfo)
 			self.PUT("/info", allHandlers.registerHandler.UpdateSelfInfo)
 		}
 		bookmarks := v1.Group("/bookmarks")
 		{
-			bookmarks.Use(jwtAuth.JWTAuth())
+			bookmarks.Use(middlewares.jwtAuth.JWTAuth())
+			bookmarks.Use(middlewares.rateLimiter.LimitByUser(e.cfg.RateLimitUserLimit, e.cfg.RateLimitUserInterval))
 
 			bookmarks.GET("", allHandlers.bookmarkHandler.GetBookmarks)
 			bookmarks.POST("", allHandlers.bookmarkHandler.AddBookmark)
